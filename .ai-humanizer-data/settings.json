@@ -1,0 +1,14 @@
+{
+  "selected_provider": "ollama",
+  "selected_model": "",
+  "ollama_base_url": "http://localhost:11434/api",
+  "temperature": 0.7,
+  "technique_settings": {
+    "typo_insertion": false,
+    "punctuation_variation": true,
+    "organic_repetition": false,
+    "dynamic_formatting": false
+  },
+  "theme": "vintage-mono",
+  "window_geometry": "01d9d0cb0003000000000000000000000000058b000003a100000000000000000000058b000003a10000000000000000032000000000000000000000058b000003a1"
+}

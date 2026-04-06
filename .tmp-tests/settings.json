@@ -1,0 +1,14 @@
+{
+  "selected_provider": "groq",
+  "selected_model": "llama-3.3-70b-versatile",
+  "ollama_base_url": "http://localhost:11434/api",
+  "temperature": 0.5,
+  "technique_settings": {
+    "typo_insertion": true,
+    "punctuation_variation": true,
+    "organic_repetition": true,
+    "dynamic_formatting": false
+  },
+  "theme": "vintage-mono",
+  "window_geometry": "beef"
+}

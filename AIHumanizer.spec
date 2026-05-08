@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['ai_humanizer\\__main__.py'],
+    ['main.py'],
     pathex=[],
     binaries=[],
     datas=[('ai_humanizer\\resources\\system-prompt-example1.md', 'ai_humanizer\\resources')],

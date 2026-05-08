@@ -33,6 +33,8 @@ OLLAMA_CLOUD_MODEL=gpt-oss:120b
 
 For Vercel, add the same environment variables in Project Settings.
 
+The humanize API also enforces a per-instance concurrency cap of 5 active requests. If the app is already busy, extra requests get a retryable `429 Too Many Requests` response with a short `Retry-After` hint.
+
 ## Scripts
 
 ```bash

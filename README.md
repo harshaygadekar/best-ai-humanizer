@@ -26,4 +26,4 @@ python -m ai_humanizer
 .\build.ps1
 ```
 
-This produces a portable one-folder build under `dist\AIHumanizer`.
+This produces a portable one-folder build under a timestamped directory inside `release\`, for example `release\20260408-231500\AIHumanizer`.

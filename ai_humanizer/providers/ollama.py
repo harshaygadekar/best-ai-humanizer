@@ -15,9 +15,15 @@ from ai_humanizer.providers.http import request_json
 
 class OllamaProvider(ProviderClient):
     DEFAULT_BASE_URL = "http://localhost:11434/api"
+    KEEP_ALIVE = "15m"
 
     def list_models(self, config: ProviderConfig) -> list[ModelOption]:
-        payload = request_json("GET", f"{self._base_url(config)}/tags", timeout=20)
+        payload = request_json(
+            "GET",
+            f"{self._base_url(config)}/tags",
+            headers=self._headers(config),
+            timeout=20,
+        )
         models = []
         for item in payload.get("models", []):
             model_id = item.get("model") or item.get("name")
@@ -42,11 +48,15 @@ class OllamaProvider(ProviderClient):
         payload = request_json(
             "POST",
             f"{self._base_url(config)}/generate",
+            headers=self._headers(config),
             json_body={
                 "model": request.model_id,
                 "system": system_prompt,
                 "prompt": user_prompt,
                 "stream": False,
+                "format": "json",
+                "think": self._think_setting(request.model_id),
+                "keep_alive": self.KEEP_ALIVE,
                 "options": {
                     "temperature": request.temperature,
                 },
@@ -79,12 +89,15 @@ class OllamaProvider(ProviderClient):
         payload = request_json(
             "POST",
             f"{self._base_url(config)}/generate",
+            headers=self._headers(config),
             json_body={
                 "model": model_id,
                 "system": system_prompt,
                 "prompt": user_prompt,
                 "stream": False,
-                "options": {"temperature": 0.2},
+                "think": self._think_setting(model_id),
+                "keep_alive": self.KEEP_ALIVE,
+                "options": {"temperature": 0.1},
             },
         )
         notes = [
@@ -105,3 +118,15 @@ class OllamaProvider(ProviderClient):
 
     def _base_url(self, config: ProviderConfig) -> str:
         return (config.base_url or self.DEFAULT_BASE_URL).rstrip("/")
+
+    def _headers(self, config: ProviderConfig) -> dict[str, str]:
+        headers = {"Content-Type": "application/json"}
+        if config.cloud_token:
+            headers["Authorization"] = f"Bearer {config.cloud_token}"
+        return headers
+
+    def _think_setting(self, model_id: str):
+        lowered = model_id.lower()
+        if "gpt-oss" in lowered:
+            return "low"
+        return False

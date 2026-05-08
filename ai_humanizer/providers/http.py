@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 from typing import Any
 
 import requests
@@ -7,6 +8,17 @@ import requests
 
 class ProviderHTTPError(RuntimeError):
     pass
+
+
+_thread_local = threading.local()
+
+
+def _session() -> requests.Session:
+    session = getattr(_thread_local, "session", None)
+    if session is None:
+        session = requests.Session()
+        setattr(_thread_local, "session", session)
+    return session
 
 
 def request_json(
@@ -18,7 +30,7 @@ def request_json(
     json_body: dict[str, Any] | None = None,
     timeout: int = 60,
 ) -> dict[str, Any]:
-    response = requests.request(
+    response = _session().request(
         method,
         url,
         headers=headers,

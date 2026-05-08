@@ -2,6 +2,10 @@ export function providerErrorMessage(error: unknown): string {
   const raw = error instanceof Error ? error.message : String(error || "");
   const lowered = raw.toLowerCase();
 
+  if (lowered.includes("too many humanize requests") || lowered.includes("too many requests")) {
+    return "Too many requests are running at once. Please wait a few seconds and try again.";
+  }
+
   if (lowered.includes("groq_api_key") || lowered.includes("ollama_api_key")) {
     return "Provider API keys are missing. Add GROQ_API_KEY and OLLAMA_API_KEY to your local .env.local file and Vercel environment variables.";
   }

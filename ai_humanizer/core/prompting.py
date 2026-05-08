@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 import re
+from ast import literal_eval
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -32,21 +34,24 @@ class PromptBuilder:
             )
 
         system_prompt = f"""
-You are an expert humanization editor for personal local use.
+You are an expert rewrite editor for AI-assisted text humanization.
 
 Goal:
-- Rewrite text so it reads as naturally human-written, with heavy anti-AI cleanup, while preserving the original meaning and useful structure.
-- Keep the writing grounded, specific, and believable.
-- Sound like a person with texture, not a chatbot trying to sound polished.
+- Rewrite text so it sounds like a real person wrote it.
+- Heavy humanization is required, but the original meaning and factual claims must stay intact.
+- Make the writing sound lived-in, specific, and natural rather than polished into generic "good prose."
 
 Core rules:
-- Remove inflated significance, fake grandeur, promotional language, vague authority, tutorial signposting, filler, and overexplained transitions.
-- Prefer direct verbs, simple syntax, and specific details over padded abstraction.
-- Break overly tidy cadence. Vary sentence length. Allow occasional asymmetry and light roughness.
-- Cut em-dash overuse, rule-of-three phrasing, repetitive synonyms, hedging clusters, and canned "AI vocabulary."
-- Preserve the user's apparent intent, factual meaning, and tone target.
+- Do a real rewrite, not light cleanup. If the output mostly mirrors the source with tiny edits, that is a failure.
+- Remove inflated significance, fake grandeur, vague authority, tutorial signposting, filler, and overexplained transitions.
+- Prefer direct verbs, natural sentence openings, and concrete wording over compressed noun stacks.
+- Break overly tidy cadence. Vary sentence length and paragraph shape. Avoid three neat summary sentences in a row.
+- Cut em-dash overuse, rule-of-three phrasing, repetitive synonyms, hedging clusters, and canned AI vocabulary.
+- For short technical blurbs, unpack the compressed pitch-deck style into natural prose while keeping key technical terms.
+- Keep named entities, pipeline names, counts, and claims unless the source itself is unclear.
 - Do not add citations, studies, names, or facts that were not present in the source.
-- Avoid sounding sterile. Use selective informality where it fits. Human writing can be slightly uneven.
+- Avoid sounding sterile. Selective informality is good when it fits. Human writing can be slightly uneven.
+- Never include labels like FINAL VERSION, REMAINING TELLS, NOTES, or any audit commentary in the final prose.
 
 Technique controls:
 {technique_lines}
@@ -55,11 +60,12 @@ Reference digest derived from the bundled anti-AI writing guide:
 {reference_digest}
 {voice_section}
 Process:
-1. Rewrite the text into a strong first draft.
-2. Audit the draft by asking: "What still sounds AI-generated here?"
-3. Revise once more and return only:
-   - FINAL VERSION
-   - REMAINING TELLS
+1. Draft a substantially more human version.
+2. Audit it privately for anything that still sounds synthetic.
+3. Revise once more.
+4. Return only a JSON object with this exact shape:
+   {{"final_text":"...","remaining_tells":["..."]}}
+5. Do not wrap the JSON in markdown fences.
 """.strip()
 
         user_prompt = f"""
@@ -71,6 +77,8 @@ Constraints:
 - If the source is informal, keep it informal.
 - If the source is structured, keep it readable but less robotic.
 - Use straight quotes.
+- If the source is short, do not be timid. Humanize it enough that the sentence structure clearly changes.
+- If the source sounds like a product blurb or abstract, make it sound more like a person explaining the same thing.
 
 Source text:
 --- SOURCE START ---
@@ -83,7 +91,7 @@ Source text:
         system_prompt = f"""
 You are analyzing text for AI-detection risk and human-likeness.
 
-Return concise plain-text sections:
+Return concise plain-text sections using short lines only:
 Detection risk:
 - ...
 
@@ -99,6 +107,12 @@ Focus on:
 - filler or overformal language
 - punctuation naturalness
 - whether the text feels too neat or too synthetic
+
+Constraints:
+- No markdown bold.
+- No code fences.
+- Keep it short.
+- Do not restate the whole passage.
 
 Model context: {model_id}
 Local heuristic snapshot:
@@ -116,19 +130,27 @@ Text:
         return PromptPackage(system_prompt=system_prompt, user_prompt=user_prompt)
 
     def parse_humanize_response(self, raw_text: str) -> tuple[str, list[str]]:
-        sections = re.split(r"(?im)^remaining tells\s*:?\s*$", raw_text)
-        if len(sections) == 1:
-            text = raw_text.strip()
-            return text, []
+        cleaned = self._strip_wrappers(raw_text)
+        payload = self._extract_json_payload(cleaned)
+        if payload is not None:
+            final_text = self._clean_final_text(str(payload.get("final_text", "")).strip())
+            tells = self._normalize_tells(payload.get("remaining_tells", []))
+            if final_text:
+                return final_text, tells
 
-        final_text = re.sub(r"(?im)^final version\s*:?\s*$", "", sections[0]).strip()
-        tells = [line.strip("- ").strip() for line in sections[1].splitlines() if line.strip()]
-        return final_text, tells
+        sections = re.split(
+            r"(?is)\b(?:rem(?:aining|nant)\s+tells?|remaining ai tells|audit(?:\s+notes)?|what still sounds ai-generated)\b\s*:?",
+            cleaned,
+            maxsplit=1,
+        )
+        final_text = self._clean_final_text(sections[0])
+        tells = self._normalize_tells(sections[1].splitlines() if len(sections) > 1 else [])
+        return final_text or cleaned.strip(), tells
 
     def _technique_lines(self, settings: TechniqueSettings) -> str:
         enabled = []
         if settings.typo_insertion:
-            enabled.append("- Allow subtle, rare typo-like texture only when it feels believable and does not break readability.")
+            enabled.append("- Allow at most one subtle typo-like touch in longer text only when it feels believable and does not hurt readability.")
         if settings.punctuation_variation:
             enabled.append("- Vary punctuation naturally. Do not fall into perfectly regular comma patterns.")
         if settings.organic_repetition:
@@ -151,3 +173,65 @@ Text:
             f"{digest}. Also favor active voice, specific claims, simpler copulas, fewer bold/list theatrics, "
             "and endings that sound grounded instead of cheerfully generic."
         )
+
+    def _extract_json_payload(self, text: str) -> dict | None:
+        candidates = [text.strip()]
+        match = re.search(r"\{.*\}", text, flags=re.DOTALL)
+        if match:
+            candidates.append(match.group(0).strip())
+
+        for candidate in candidates:
+            if not candidate or "{" not in candidate or "}" not in candidate:
+                continue
+            for parser in (json.loads, literal_eval):
+                try:
+                    payload = parser(candidate)
+                except (ValueError, SyntaxError):
+                    continue
+                if isinstance(payload, dict):
+                    return payload
+        return None
+
+    def _strip_wrappers(self, text: str) -> str:
+        cleaned = text.strip()
+        cleaned = re.sub(r"^```(?:json|text)?\s*", "", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\s*```$", "", cleaned)
+        return cleaned.strip()
+
+    def _clean_final_text(self, text: str) -> str:
+        text = self._strip_wrappers(text)
+        text = re.sub(r"(?im)^(?:final(?:\s+version)?|rewrite|output)\s*:?\s*$", "", text).strip()
+        text = re.split(
+            r"(?is)\b(?:rem(?:aining|nant)\s+tells?|remaining ai tells|audit(?:\s+notes)?|what still sounds ai-generated)\b\s*:?",
+            text,
+            maxsplit=1,
+        )[0].strip()
+        lines = []
+        for line in text.splitlines():
+            stripped = line.strip()
+            if re.match(
+                r"(?i)^(?:rem(?:aining|nant)\s+tells?|audit(?:\s+notes)?|what still sounds ai-generated)\b",
+                stripped,
+            ):
+                break
+            lines.append(line.rstrip())
+        return "\n".join(lines).strip()
+
+    def _normalize_tells(self, value: object) -> list[str]:
+        if isinstance(value, str):
+            values = value.splitlines()
+        elif isinstance(value, list):
+            values = [str(item) for item in value]
+        else:
+            values = []
+
+        tells = []
+        for item in values:
+            cleaned = item.strip().strip("-").strip()
+            if not cleaned:
+                continue
+            lowered = cleaned.lower().rstrip(".")
+            if lowered in {"none", "none detected", "no remaining tells", "no obvious tells"}:
+                continue
+            tells.append(cleaned)
+        return tells

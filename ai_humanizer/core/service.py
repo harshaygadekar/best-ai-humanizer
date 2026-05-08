@@ -48,6 +48,15 @@ class HumanizerService:
         return client.list_models(config)
 
     def humanize(self, request: HumanizeRequest, config: ProviderConfig) -> HumanizeWorkflowResult:
+        return self._humanize(request, config, include_ai_analysis=False)
+
+    def _humanize(
+        self,
+        request: HumanizeRequest,
+        config: ProviderConfig,
+        *,
+        include_ai_analysis: bool,
+    ) -> HumanizeWorkflowResult:
         client = self.registry.get(request.provider)
         validation = client.validate_config(config)
         if not validation.ok:
@@ -58,17 +67,19 @@ class HumanizerService:
         final_text, remaining_tells = self.prompt_builder.parse_humanize_response(provider_result.output_text)
         rewrite = HumanizeResult(
             output_text=final_text,
-            audit_notes=remaining_tells or provider_result.audit_notes,
+            audit_notes=remaining_tells,
             usage_meta=provider_result.usage_meta,
         )
         local_snapshot = self.analyzer.analyze(final_text)
-        ai_notes = self._analyze_with_provider(
-            provider=request.provider,
-            model_id=request.model_id,
-            config=config,
-            text=final_text,
-            local_snapshot=local_snapshot,
-        )
+        ai_notes: list[str] = []
+        if include_ai_analysis:
+            ai_notes = self._analyze_with_provider(
+                provider=request.provider,
+                model_id=request.model_id,
+                config=config,
+                text=final_text,
+                local_snapshot=local_snapshot,
+            )
         return HumanizeWorkflowResult(rewrite=rewrite, local_analysis=local_snapshot, ai_analysis_notes=ai_notes)
 
     def analyze_with_provider(

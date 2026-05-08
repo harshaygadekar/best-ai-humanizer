@@ -29,7 +29,7 @@ class PromptBuilderTests(unittest.TestCase):
         package = self.builder.build_humanize_prompt(request)
 
         self.assertIn("Voice matching reference", package.system_prompt)
-        self.assertIn("Allow subtle, rare typo-like texture", package.system_prompt)
+        self.assertIn("Allow at most one subtle typo-like touch", package.system_prompt)
         self.assertIn("Vary paragraph size and line breaks", package.system_prompt)
         self.assertIn("This is very important", package.user_prompt)
 
@@ -38,6 +38,17 @@ class PromptBuilderTests(unittest.TestCase):
         text, tells = self.builder.parse_humanize_response(raw)
         self.assertEqual("Clean rewrite.", text)
         self.assertEqual(["still a bit tidy", "too polished"], tells)
+
+    def test_parse_humanize_response_handles_json_and_remnant_variant(self) -> None:
+        raw = '{"final_text":"A more human rewrite.","remaining_tells":["slightly tidy ending"]}'
+        text, tells = self.builder.parse_humanize_response(raw)
+        self.assertEqual("A more human rewrite.", text)
+        self.assertEqual(["slightly tidy ending"], tells)
+
+        variant = "A more human rewrite.\n\nREMNANT TELLS: None detected"
+        text, tells = self.builder.parse_humanize_response(variant)
+        self.assertEqual("A more human rewrite.", text)
+        self.assertEqual([], tells)
 
 
 if __name__ == "__main__":

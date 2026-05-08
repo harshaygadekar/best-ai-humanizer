@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, Clipboard, Copy, Eraser, Loader2, Settings, Sparkles, Wand2 } from "lucide-react";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { HUMANIZE_MODES } from "../lib/modes";
 import { readabilityHint, wordCount } from "../lib/text";
 
@@ -15,7 +15,7 @@ export default function Home() {
   const [output, setOutput] = useState("");
   const [modeId, setModeId] = useState("standard");
   const [primaryProvider, setPrimaryProvider] = useState<PrimaryProvider>("groq");
-  const [groqModel, setGroqModel] = useState("llama-3.1-8b-instant");
+  const [groqModel, setGroqModel] = useState("");
   const [ollamaCloudModel, setOllamaCloudModel] = useState("gpt-oss:120b");
   const [showSettings, setShowSettings] = useState(false);
   const [voiceSample, setVoiceSample] = useState("");
@@ -28,6 +28,43 @@ export default function Home() {
   const activeMode = useMemo(() => HUMANIZE_MODES.find((mode) => mode.id === modeId) ?? HUMANIZE_MODES[0], [modeId]);
   const sourceWords = wordCount(source);
   const outputWords = wordCount(output);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadDefaults() {
+      try {
+        const response = await fetch("/api/config");
+        if (!response.ok) return;
+
+        const data = (await response.json()) as {
+          primaryProvider?: PrimaryProvider;
+          groqModel?: string;
+          ollamaCloudModel?: string;
+        };
+
+        if (!isMounted) return;
+
+        if (data.primaryProvider) {
+          setPrimaryProvider(data.primaryProvider);
+        }
+        if (data.groqModel) {
+          setGroqModel(data.groqModel);
+        }
+        if (data.ollamaCloudModel) {
+          setOllamaCloudModel(data.ollamaCloudModel);
+        }
+      } catch {
+        // Keep local fallbacks if the config endpoint is unavailable.
+      }
+    }
+
+    loadDefaults();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   function humanize() {
     setError("");
@@ -57,7 +94,14 @@ export default function Home() {
     const response = await fetch("/api/humanize", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: source, modeId, primaryProvider, groqModel, ollamaCloudModel, voiceSample })
+      body: JSON.stringify({
+        text: source,
+        modeId,
+        primaryProvider,
+        groqModel: groqModel || undefined,
+        ollamaCloudModel: ollamaCloudModel || undefined,
+        voiceSample
+      })
     });
     const data = await response.json();
     if (!response.ok) {
@@ -112,7 +156,7 @@ export default function Home() {
             </label>
             <label>
               <span>Groq model</span>
-              <input value={groqModel} onChange={(event) => setGroqModel(event.target.value)} placeholder="llama-3.1-8b-instant" />
+              <input value={groqModel} onChange={(event) => setGroqModel(event.target.value)} placeholder="Loading server default..." />
             </label>
             <label>
               <span>Ollama Cloud model</span>

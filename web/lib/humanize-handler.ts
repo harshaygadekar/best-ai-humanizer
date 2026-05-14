@@ -8,6 +8,7 @@ export type HumanizeBody = {
   text?: unknown;
   modeId?: unknown;
   primaryProvider?: unknown;
+  cerebrasModel?: unknown;
   groqModel?: unknown;
   ollamaCloudModel?: unknown;
   temperature?: unknown;
@@ -17,8 +18,10 @@ export type HumanizeBody = {
 export type HumanizeHandlerDeps = {
   limiter: ConcurrencyLimiter;
   primaryProviderDefault?: string;
+  cerebrasApiKey?: string;
   groqApiKey?: string;
   ollamaApiKey?: string;
+  cerebrasModelDefault?: string;
   groqModelDefault?: string;
   ollamaCloudModelDefault?: string;
   humanize?: typeof humanizeWithFallbacks;
@@ -28,10 +31,11 @@ export type HumanizeHandlerDeps = {
 export async function handleHumanizeRequest(body: HumanizeBody, deps: HumanizeHandlerDeps) {
   const text = String(body.text ?? "").trim();
   const primaryProvider = normalizePrimaryProvider(
-    String(body.primaryProvider || deps.primaryProviderDefault || "groq")
+    String(body.primaryProvider || deps.primaryProviderDefault || "cerebras")
   );
-  const groqModel = String(body.groqModel || deps.groqModelDefault || "llama-3.1-8b-instant").trim();
-  const ollamaCloudModel = String(body.ollamaCloudModel || deps.ollamaCloudModelDefault || "gpt-oss:120b").trim();
+  const cerebrasModel = String(body.cerebrasModel || deps.cerebrasModelDefault || "gpt-oss-120b").trim();
+  const groqModel = String(body.groqModel || deps.groqModelDefault || "openai/gpt-oss-120b").trim();
+  const ollamaCloudModel = String(body.ollamaCloudModel || deps.ollamaCloudModelDefault || "gemma4:31b-cloud").trim();
 
   if (!text) {
     return NextResponse.json({ error: "Paste some text before humanizing." }, { status: 400 });
@@ -56,8 +60,10 @@ export async function handleHumanizeRequest(body: HumanizeBody, deps: HumanizeHa
     const humanize = deps.humanize ?? humanizeWithFallbacks;
     const result = await humanize({
       primaryProvider,
+      cerebrasApiKey: deps.cerebrasApiKey || "",
       groqApiKey: deps.groqApiKey || "",
       ollamaApiKey: deps.ollamaApiKey || "",
+      cerebrasModel,
       groqModel,
       ollamaCloudModel,
       system: prompt.system,
@@ -82,5 +88,7 @@ export async function handleHumanizeRequest(body: HumanizeBody, deps: HumanizeHa
 }
 
 function normalizePrimaryProvider(value: string): ProviderId {
-  return value === "ollama-cloud" ? "ollama-cloud" : "groq";
+  if (value === "ollama-cloud") return "ollama-cloud";
+  if (value === "cerebras") return "cerebras";
+  return "cerebras"; // default to cerebras
 }

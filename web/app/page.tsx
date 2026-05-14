@@ -1,20 +1,42 @@
 "use client";
 
-import { Check, Clipboard, Copy, Eraser, Loader2, Settings, Sparkles, Wand2 } from "lucide-react";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { AlertTriangle, Check, CheckCircle, Clipboard, Copy, Eraser, Loader2, Search, Settings, ShieldCheck, Sparkles, Wand2, XCircle } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { HUMANIZE_MODES } from "../lib/modes";
 import { readabilityHint, wordCount } from "../lib/text";
 
 const SAMPLE_TEXT =
   "In today's rapidly evolving digital landscape, artificial intelligence is revolutionizing the way individuals and organizations create content, enabling unprecedented levels of efficiency, scalability, and innovation across diverse communication workflows.";
 
-type PrimaryProvider = "groq" | "ollama-cloud";
+type PrimaryProvider = "cerebras" | "groq" | "ollama-cloud";
+
+type DetectorStatus = "pass" | "fail" | "error" | "skipped";
+
+type DetectorResult = {
+  id: string;
+  name: string;
+  status: DetectorStatus;
+  aiScore: number;
+  humanScore: number;
+  error?: string;
+};
+
+type DetectionReport = {
+  overallAiPercent: number;
+  verdict: string;
+  flaggedCount: number;
+  totalChecked: number;
+  detectors: DetectorResult[];
+};
+
+const COOLDOWN_SECONDS = 45;
 
 export default function Home() {
   const [source, setSource] = useState("");
   const [output, setOutput] = useState("");
   const [modeId, setModeId] = useState("standard");
-  const [primaryProvider, setPrimaryProvider] = useState<PrimaryProvider>("groq");
+  const [primaryProvider, setPrimaryProvider] = useState<PrimaryProvider>("cerebras");
+  const [cerebrasModel, setCerebrasModel] = useState("");
   const [groqModel, setGroqModel] = useState("");
   const [ollamaCloudModel, setOllamaCloudModel] = useState("gpt-oss:120b");
   const [showSettings, setShowSettings] = useState(false);
@@ -24,6 +46,13 @@ export default function Home() {
   const [copied, setCopied] = useState(false);
   const [remainingTells, setRemainingTells] = useState<string[]>([]);
   const [isPending, startTransition] = useTransition();
+
+  // Detection state
+  const [detectionReport, setDetectionReport] = useState<DetectionReport | null>(null);
+  const [isDetecting, setIsDetecting] = useState(false);
+  const [detectError, setDetectError] = useState("");
+  const [cooldown, setCooldown] = useState(0);
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const activeMode = useMemo(() => HUMANIZE_MODES.find((mode) => mode.id === modeId) ?? HUMANIZE_MODES[0], [modeId]);
   const sourceWords = wordCount(source);
@@ -39,6 +68,7 @@ export default function Home() {
 
         const data = (await response.json()) as {
           primaryProvider?: PrimaryProvider;
+          cerebrasModel?: string;
           groqModel?: string;
           ollamaCloudModel?: string;
         };
@@ -47,6 +77,9 @@ export default function Home() {
 
         if (data.primaryProvider) {
           setPrimaryProvider(data.primaryProvider);
+        }
+        if (data.cerebrasModel) {
+          setCerebrasModel(data.cerebrasModel);
         }
         if (data.groqModel) {
           setGroqModel(data.groqModel);
@@ -66,11 +99,35 @@ export default function Home() {
     };
   }, []);
 
+  // Cleanup cooldown timer on unmount
+  useEffect(() => {
+    return () => {
+      if (cooldownRef.current) clearInterval(cooldownRef.current);
+    };
+  }, []);
+
+  function startCooldown() {
+    setCooldown(COOLDOWN_SECONDS);
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    cooldownRef.current = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          if (cooldownRef.current) clearInterval(cooldownRef.current);
+          cooldownRef.current = null;
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }
+
   function humanize() {
     setError("");
     setProviderLabel("");
     setCopied(false);
     setRemainingTells([]);
+    setDetectionReport(null);
+    setDetectError("");
 
     if (!source.trim()) {
       setError("Paste some text first.");
@@ -82,7 +139,8 @@ export default function Home() {
         const data = await humanizeOnServer();
         setOutput(data.text);
         setRemainingTells(data.remainingTells ?? []);
-        setProviderLabel(`${data.provider === "groq" ? "Groq" : "Ollama Cloud"} / ${data.model}`);
+        const providerNames: Record<string, string> = { cerebras: "Cerebras", groq: "Groq", "ollama-cloud": "Ollama Cloud" };
+        setProviderLabel(`${providerNames[data.provider] || data.provider} / ${data.model}`);
       } catch (caught) {
         const message = caught instanceof Error ? caught.message : "Humanization failed.";
         setError(message);
@@ -98,6 +156,7 @@ export default function Home() {
         text: source,
         modeId,
         primaryProvider,
+        cerebrasModel: cerebrasModel || undefined,
         groqModel: groqModel || undefined,
         ollamaCloudModel: ollamaCloudModel || undefined,
         voiceSample
@@ -109,6 +168,33 @@ export default function Home() {
     }
     return data as { text: string; remainingTells?: string[]; provider: PrimaryProvider; model: string };
   }
+
+  const checkForAI = useCallback(async () => {
+    if (!output.trim() || isDetecting || cooldown > 0) return;
+
+    setIsDetecting(true);
+    setDetectError("");
+    setDetectionReport(null);
+
+    try {
+      const response = await fetch("/api/detect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: output })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error ?? "Detection failed.");
+      }
+      setDetectionReport(data as DetectionReport);
+      startCooldown();
+    } catch (caught) {
+      const message = caught instanceof Error ? caught.message : "AI detection failed.";
+      setDetectError(message);
+    } finally {
+      setIsDetecting(false);
+    }
+  }, [output, isDetecting, cooldown]);
 
   async function copyOutput() {
     if (!output) return;
@@ -148,11 +234,15 @@ export default function Home() {
         {showSettings ? (
           <div className="settingsPanel">
             <label>
-              <span>Main provider</span>
+              <span>Provider chain</span>
               <select value={primaryProvider} onChange={(event) => setPrimaryProvider(event.target.value as PrimaryProvider)}>
-                <option value="groq">Groq first, Ollama Cloud fallback</option>
-                <option value="ollama-cloud">Ollama Cloud first, Groq fallback</option>
+                <option value="cerebras">Cerebras → Ollama Cloud → Groq</option>
+                <option value="ollama-cloud">Ollama Cloud → Cerebras → Groq</option>
               </select>
+            </label>
+            <label>
+              <span>Cerebras model</span>
+              <input value={cerebrasModel} onChange={(event) => setCerebrasModel(event.target.value)} placeholder="gpt-oss-120b" />
             </label>
             <label>
               <span>Groq model</span>
@@ -218,12 +308,120 @@ export default function Home() {
             <div className="paneFooter outputFooter">
               <span>{outputWords} words</span>
               <span>{providerLabel || (remainingTells.length ? `${remainingTells.length} notes left` : "Private audit clean")}</span>
+              <button
+                className="detectButton"
+                type="button"
+                onClick={checkForAI}
+                disabled={!output.trim() || isDetecting || cooldown > 0}
+                aria-label="Check for AI content"
+              >
+                {isDetecting ? (
+                  <Loader2 className="spin" size={15} />
+                ) : (
+                  <ShieldCheck size={15} />
+                )}
+                {isDetecting ? "Checking…" : cooldown > 0 ? `Wait ${cooldown}s` : "Check for AI"}
+              </button>
             </div>
           </section>
         </div>
 
         {error ? <div className="errorBox">{error}</div> : null}
+        {detectError ? <div className="errorBox">{detectError}</div> : null}
+
+        {/* Detection loading state */}
+        {isDetecting && !detectionReport ? (
+          <div className="detectionPanel">
+            <div className="detectionLoading">
+              <Loader2 className="spin" size={22} />
+              <span>Cross-checking with AI detectors…</span>
+            </div>
+          </div>
+        ) : null}
+
+        {/* Detection results panel */}
+        {detectionReport ? <DetectionPanel report={detectionReport} /> : null}
       </section>
     </main>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Detection Report Panel
+// ---------------------------------------------------------------------------
+
+function DetectionPanel({ report }: { report: DetectionReport }) {
+  const { overallAiPercent, verdict, flaggedCount, totalChecked, detectors } = report;
+
+  // Only show detectors that were actually called (not skipped)
+  const activeDetectors = detectors.filter((d) => d.status !== "skipped");
+
+  const verdictClass =
+    overallAiPercent < 30 ? "verdictHuman" : overallAiPercent <= 70 ? "verdictMixed" : "verdictAi";
+
+  const scoreClass =
+    overallAiPercent < 30 ? "scoreHuman" : overallAiPercent <= 70 ? "scoreMixed" : "scoreAi";
+
+  const VerdictIconComponent =
+    overallAiPercent < 30 ? CheckCircle : overallAiPercent <= 70 ? AlertTriangle : XCircle;
+
+  const flagSummary =
+    totalChecked === 0
+      ? "No detectors were available to check."
+      : `${flaggedCount} of ${totalChecked} detector${totalChecked !== 1 ? "s" : ""} flagged AI.`;
+
+  // Build conic-gradient for donut chart
+  const humanPercent = 100 - overallAiPercent;
+  const aiColor = overallAiPercent < 30 ? "#4ade80" : overallAiPercent <= 70 ? "#fbbf24" : "#f87171";
+  const trackColor = "rgba(255,255,255,0.08)";
+  const donutGradient = `conic-gradient(${aiColor} 0% ${overallAiPercent}%, ${trackColor} ${overallAiPercent}% 100%)`;
+
+  return (
+    <div className="detectionPanel" role="region" aria-label="AI detection results">
+      {/* Verdict banner */}
+      <div className={`detectionBanner ${verdictClass}`}>
+        <div className="verdictIcon">
+          <VerdictIconComponent size={18} />
+        </div>
+        <div className="verdictText">
+          <h3>{verdict}</h3>
+          <p>{flagSummary}</p>
+        </div>
+      </div>
+
+      {/* Body: donut chart + detector badges */}
+      {activeDetectors.length > 0 ? (
+        <div className="detectionBody">
+          {/* Donut chart */}
+          <div className={`donutWrap ${scoreClass}`}>
+            <div
+              className="donutChart"
+              style={{ "--donut-gradient": donutGradient } as React.CSSProperties}
+            >
+              <div className="donutCenter">
+                <span className="donutPercent">{overallAiPercent}%</span>
+                <span className="donutLabel">AI GPT</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Detector badges */}
+          <div className="detectorSection">
+            <p className="detectorSectionLabel">Cross-checked with:</p>
+            <div className="detectorGrid">
+              {activeDetectors.map((detector) => (
+                <div key={detector.id} className="detectorBadge">
+                  <span className={`statusDot ${detector.status}`} />
+                  <span>{detector.name}</span>
+                  {(detector.status === "pass" || detector.status === "fail") ? (
+                    <span className="detectorScore">{detector.aiScore}%</span>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
   );
 }

@@ -1,0 +1,1468 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://inference-docs.cerebras.ai/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+<AgentInstructions>
+
+## Submitting Feedback
+
+If you encounter incorrect, outdated, or confusing documentation on this page, submit feedback:
+
+POST https://inference-docs.cerebras.ai/feedback
+
+```json
+{
+  "path": "/models/overview",
+  "feedback": "Description of the issue"
+}
+```
+
+Only submit feedback when you have something specific and actionable to report.
+
+</AgentInstructions>
+
+# Supported Models
+
+<Callout icon="circle-exclamation" color="#F15A29">
+  Due to high demand on `zai-glm-4.7` and `gpt-oss-120b`, we've temporarily reduced free-tier rate limits. We're working to bring them back as quickly as possible and appreciate your understanding.
+</Callout>
+
+<Warning>
+  `llama3.1-8b` and `qwen-3-235b-a22b-instruct-2507` will be deprecated on **May 27, 2026**.
+</Warning>
+
+## Production Models
+
+Production models are fully supported offerings intended for use in production environments.
+
+| Model Name                           | Model ID       | Parameters  | Speed (tokens/s) |
+| :----------------------------------- | :------------- | :---------- | :--------------- |
+| [Llama 3.1 8B](/models/llama-31-8b)  | `llama3.1-8b`  | 8 billion   | \~2200           |
+| [OpenAI GPT OSS](/models/openai-oss) | `gpt-oss-120b` | 120 billion | \~3000           |
+
+<Info>
+  Looking for more models? Many additional model families are available through [Dedicated Endpoints](/dedicated/overview#supported-models).
+</Info>
+
+## Preview Models
+
+Preview models are hosted on Cerebras with full accuracy and performance. Please note that these preview models are intended for evaluation purposes only and should not be used in production, as they may be discontinued on short notice.
+
+| Model Name                                       | Model ID                         | Parameters  | Speed (tokens/s) |
+| :----------------------------------------------- | :------------------------------- | :---------- | :--------------- |
+| [Qwen 3 235B Instruct](/models/qwen-3-235b-2507) | `qwen-3-235b-a22b-instruct-2507` | 235 billion | \~1400           |
+| [Z.ai GLM 4.7 <sup>1</sup>](/models/zai-glm-47)  | `zai-glm-4.7`                    | 355 billion | \~1000           |
+
+<Tip>
+  <sup>1</sup> Migrating from another model? Check out our [GLM 4.7 Migration Guide](/resources/glm-47-migration) for prompt optimization tips and best practices.
+</Tip>
+
+## Model Compression
+
+This section provides transparency about the compression state of each model available on our platform.
+
+We host a variety of open-source models from the community. We do not currently host pruned models on our public endpoints. All models served through our public endpoints are the original, unpruned versions.
+
+While we conduct research on pruning techniques like REAP (Router-weighted Expert Activation Pruning), these pruned models are shared with the research community on Hugging Face but are not available through our shared API. You can read more about REAP in our [research blog](https://www.cerebras.ai/blog/reap). **All of our public models are unpruned.**
+
+Cerebras uses selective weight-only quantization only during storage to preserve maximal quality. This means that the weights are stored in partial 16-bit / 8-bit / 4-bit, in-line with industry standards. For quality, sensitive layers are stored at full precision with dequantization on the fly, so operations are done in high precision. The activations, attention, and kv cache remain in full precision and unquantized.
+
+### Frequently Asked Questions
+
+<Accordion title="Will you change a model's architecture without notice?">
+  No. We are committed to serving the original models for all existing endpoints, without modification. We do not alter model architectures via pruning on our hosted portfolio. If we explore additional compression techniques (like pruning) in the future, these would be offered as separate endpoints with pruning-specific names, ensuring complete transparency and allowing you to choose which version best fits your needs.
+</Accordion>
+
+<Accordion title="Where can I find your REAP pruned models?">
+  Our REAP pruned models are available on Hugging Face for research and experimentation purposes: [Cerebras REAP Collection](https://huggingface.co/collections/cerebras/cerebras-reap). These models demonstrate our pruning research but are not served through our production API.
+</Accordion>
+
+<Accordion title="What are compression, quantization, and pruning?">
+  **Compression** is an umbrella term for techniques that reduce model size or computational requirements. Common compression techniques include:
+
+  * **Quantization**: Reducing the precision of numbers used to represent model weights (e.g., converting from FP16 to FP8). This reduces memory usage without changing the model's architecture.
+  * **Pruning**: Permanently removing parts of a model, like layers or experts, to reduce model size. This changes the model's architecture and creates a different model.
+</Accordion>
+
+
+> ## Documentation Index
+> Fetch the complete documentation index at: https://inference-docs.cerebras.ai/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+<AgentInstructions>
+
+## Submitting Feedback
+
+If you encounter incorrect, outdated, or confusing documentation on this page, submit feedback:
+
+POST https://inference-docs.cerebras.ai/feedback
+
+```json
+{
+  "path": "/models/overview",
+  "feedback": "Description of the issue"
+}
+```
+
+Only submit feedback when you have something specific and actionable to report.
+
+</AgentInstructions>
+
+# Supported Models
+
+<Callout icon="circle-exclamation" color="#F15A29">
+  Due to high demand on `zai-glm-4.7` and `gpt-oss-120b`, we've temporarily reduced free-tier rate limits. We're working to bring them back as quickly as possible and appreciate your understanding.
+</Callout>
+
+<Warning>
+  `llama3.1-8b` and `qwen-3-235b-a22b-instruct-2507` will be deprecated on **May 27, 2026**.
+</Warning>
+
+## Production Models
+
+Production models are fully supported offerings intended for use in production environments.
+
+| Model Name                           | Model ID       | Parameters  | Speed (tokens/s) |
+| :----------------------------------- | :------------- | :---------- | :--------------- |
+| [Llama 3.1 8B](/models/llama-31-8b)  | `llama3.1-8b`  | 8 billion   | \~2200           |
+| [OpenAI GPT OSS](/models/openai-oss) | `gpt-oss-120b` | 120 billion | \~3000           |
+
+<Info>
+  Looking for more models? Many additional model families are available through [Dedicated Endpoints](/dedicated/overview#supported-models).
+</Info>
+
+## Preview Models
+
+Preview models are hosted on Cerebras with full accuracy and performance. Please note that these preview models are intended for evaluation purposes only and should not be used in production, as they may be discontinued on short notice.
+
+| Model Name                                       | Model ID                         | Parameters  | Speed (tokens/s) |
+| :----------------------------------------------- | :------------------------------- | :---------- | :--------------- |
+| [Qwen 3 235B Instruct](/models/qwen-3-235b-2507) | `qwen-3-235b-a22b-instruct-2507` | 235 billion | \~1400           |
+| [Z.ai GLM 4.7 <sup>1</sup>](/models/zai-glm-47)  | `zai-glm-4.7`                    | 355 billion | \~1000           |
+
+<Tip>
+  <sup>1</sup> Migrating from another model? Check out our [GLM 4.7 Migration Guide](/resources/glm-47-migration) for prompt optimization tips and best practices.
+</Tip>
+
+## Model Compression
+
+This section provides transparency about the compression state of each model available on our platform.
+
+We host a variety of open-source models from the community. We do not currently host pruned models on our public endpoints. All models served through our public endpoints are the original, unpruned versions.
+
+While we conduct research on pruning techniques like REAP (Router-weighted Expert Activation Pruning), these pruned models are shared with the research community on Hugging Face but are not available through our shared API. You can read more about REAP in our [research blog](https://www.cerebras.ai/blog/reap). **All of our public models are unpruned.**
+
+Cerebras uses selective weight-only quantization only during storage to preserve maximal quality. This means that the weights are stored in partial 16-bit / 8-bit / 4-bit, in-line with industry standards. For quality, sensitive layers are stored at full precision with dequantization on the fly, so operations are done in high precision. The activations, attention, and kv cache remain in full precision and unquantized.
+
+### Frequently Asked Questions
+
+<Accordion title="Will you change a model's architecture without notice?">
+  No. We are committed to serving the original models for all existing endpoints, without modification. We do not alter model architectures via pruning on our hosted portfolio. If we explore additional compression techniques (like pruning) in the future, these would be offered as separate endpoints with pruning-specific names, ensuring complete transparency and allowing you to choose which version best fits your needs.
+</Accordion>
+
+<Accordion title="Where can I find your REAP pruned models?">
+  Our REAP pruned models are available on Hugging Face for research and experimentation purposes: [Cerebras REAP Collection](https://huggingface.co/collections/cerebras/cerebras-reap). These models demonstrate our pruning research but are not served through our production API.
+</Accordion>
+
+<Accordion title="What are compression, quantization, and pruning?">
+  **Compression** is an umbrella term for techniques that reduce model size or computational requirements. Common compression techniques include:
+
+  * **Quantization**: Reducing the precision of numbers used to represent model weights (e.g., converting from FP16 to FP8). This reduces memory usage without changing the model's architecture.
+  * **Pruning**: Permanently removing parts of a model, like layers or experts, to reduce model size. This changes the model's architecture and creates a different model.
+</Accordion>
+
+> ## Documentation Index
+> Fetch the complete documentation index at: https://inference-docs.cerebras.ai/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+<AgentInstructions>
+
+## Submitting Feedback
+
+If you encounter incorrect, outdated, or confusing documentation on this page, submit feedback:
+
+POST https://inference-docs.cerebras.ai/feedback
+
+```json
+{
+  "path": "/quickstart",
+  "feedback": "Description of the issue"
+}
+```
+
+Only submit feedback when you have something specific and actionable to report.
+
+</AgentInstructions>
+
+# Quickstart
+
+> Get started with the Cerebras API.
+
+<Tip>**To get started with a free API key, [click here](https://cloud.cerebras.ai?utm_source=3pi_quickstart\&utm_campaign=docs).**</Tip>
+
+This Quickstart guide is designed to assist you in making your first API call. If you are an experienced AI applications developer, you may find it more beneficial to go directly to the [API reference documentation](https://inference-docs.cerebras.ai/api-reference/chat-completions).
+
+If you would like to interact with the models using Cerebras’ Inference solution before making an API call, please visit the [developer playground](https://cloud.cerebras.ai?utm_source=3pi_quickstart\&utm_campaign=docs).
+
+This guide will walk you through:
+
+* Setting up your developer environment
+
+* Installing the Cerebras Inference library
+
+* Making your first request to the Cerebras API
+
+## Prerequisites
+
+To complete this guide, you will need:
+
+* A Cerebras account
+
+* A Cerebras Inference API key
+
+* Python 3.7+ or TypeScript 4.5+
+
+<Steps>
+  <Step title="Set up your API key">
+    The first thing you will need is a valid API key. Please visit [this link](https://cloud.cerebras.ai?utm_source=3pi_quickstart\&utm_campaign=docs) and navigate to “API Keys” on the left nav bar.
+
+    For security reasons and to avoid configuring your API key each time, it is recommended to set your API key as an environment variable. You can do this by running the following command in your terminal:
+
+    <CodeGroup>
+      ```bash macOS / Linux theme={null}
+      export CEREBRAS_API_KEY="your-api-key-here"
+      ```
+
+      ```bash Windows theme={null}
+      setx CEREBRAS_API_KEY "your-api-key-here"
+      ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Install the Cerebras Inference library">
+    The Cerebras Inference library is available for download and installation through the Python Package Index (PyPI) and the npm package manager. To install the library run either of the following commands in your terminal, based on your language of choice:
+
+    <Note>
+      Note: You can also call the underlying API directly (see cURL request example below in Step 3).
+    </Note>
+
+    <CodeGroup>
+      ```bash Python theme={null}
+      pip install --upgrade cerebras_cloud_sdk
+      ```
+
+      ```bash Node.js theme={null}
+      npm install @cerebras/cerebras_cloud_sdk@latest
+      ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Making an API request">
+    Once you have configured your API key, you are ready to send your first API request.
+
+    The following code snippets demonstrate how to make an API request to the Cerebras API to perform a chat completion.
+
+    <CodeGroup>
+      ```python Python theme={null}
+      import os
+      from cerebras.cloud.sdk import Cerebras
+
+      client = Cerebras(
+          # This is the default and can be omitted
+          api_key=os.environ.get("CEREBRAS_API_KEY"),
+      )
+
+      chat_completion = client.chat.completions.create(
+          messages=[
+              {
+                  "role": "user",
+                  "content": "Why is fast inference important?",
+              }
+      ],
+          model="gpt-oss-120b",
+      )
+
+      print(chat_completion)
+      ```
+
+      ```javascript Node.js theme={null}
+      import Cerebras from '@cerebras/cerebras_cloud_sdk';
+
+      const client = new Cerebras({
+        apiKey: process.env['CEREBRAS_API_KEY'], // This is the default and can be omitted
+      });
+
+      async function main() {
+        const completionCreateResponse = await client.chat.completions.create({
+          messages: [{ role: 'user', content: 'Why is fast inference important?' }],
+          model: 'gpt-oss-120b',
+        });
+
+        console.log(completionCreateResponse);
+      }
+
+      main();
+      ```
+
+      ```cli cURL theme={null}
+      curl --location 'https://api.cerebras.ai/v1/chat/completions' \
+      --header 'Content-Type: application/json' \
+      --header "Authorization: Bearer ${CEREBRAS_API_KEY}" \
+      --data '{
+        "model": "gpt-oss-120b",
+        "stream": false,
+        "messages": [{"content": "why is fast inference important?", "role": "user"}],
+        "temperature": 0,
+        "max_tokens": -1,
+        "seed": 0,
+        "top_p": 1
+      }'
+      ```
+    </CodeGroup>
+  </Step>
+</Steps>
+
+## Next Steps
+
+* Visit our repositories for our [Python](https://github.com/Cerebras/cerebras-cloud-sdk-python) and [Node.js](https://github.com/Cerebras/cerebras-cloud-sdk-node) libraries
+
+* Check out our [API Reference](api-reference/chat-completions) to learn about the details of our available endpoints and request parameters.
+
+* Learn how to [stream responses](/capabilities/streaming).
+
+* Learn about [tool use](/capabilities/tool-use).
+
+> ## Documentation Index
+> Fetch the complete documentation index at: https://inference-docs.cerebras.ai/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+<AgentInstructions>
+
+## Submitting Feedback
+
+If you encounter incorrect, outdated, or confusing documentation on this page, submit feedback:
+
+POST https://inference-docs.cerebras.ai/feedback
+
+```json
+{
+  "path": "/capabilities/reasoning",
+  "feedback": "Description of the issue"
+}
+```
+
+Only submit feedback when you have something specific and actionable to report.
+
+</AgentInstructions>
+
+# Reasoning
+
+> Reasoning models generate intermediate thinking tokens before their final response, enabling better problem-solving and allowing you to inspect the model's thought process.
+
+<Note>
+  Reasoning capabilities are currently available for the [OpenAI GPT OSS](/models/openai-oss) (`gpt-oss-120b`) and [Z.ai GLM](/models/zai-glm-47) (`zai-glm-4.7`) models. Each model family has slight variations in the parameters used to control reasoning.
+</Note>
+
+## Reasoning Format
+
+Control how reasoning text appears in responses using the `reasoning_format` parameter.
+
+### Available Formats
+
+| Format   | Description                                                                                                           |
+| -------- | --------------------------------------------------------------------------------------------------------------------- |
+| `parsed` | Reasoning returned in separate `reasoning` field; logprobs separated into `reasoning_logprobs`                        |
+| `raw`    | Reasoning prepended to content; GLM and Qwen use `<think>...</think>` tokens, GPT-OSS concatenates without separators |
+| `hidden` | Reasoning text and logprobs dropped completely (tokens still counted)                                                 |
+| `none`   | Uses model's default behavior                                                                                         |
+
+### Default Behavior by Model
+
+When `reasoning_format` is set to `none` or omitted, each model uses its default format:
+
+| Model   | Default Reasoning Format                |
+| ------- | --------------------------------------- |
+| Qwen3   | `raw` (`hidden` for JSON object/schema) |
+| GLM     | `text_parsed`                           |
+| GPT-OSS | `text_parsed`                           |
+
+### `parsed` Format
+
+Reasoning text is returned in a separate `reasoning` field without start/end tokens. When logprobs are enabled, reasoning logprobs are returned in a separate `reasoning_logprobs` field.
+
+<CodeGroup>
+  ```python Request theme={null}
+  from cerebras.cloud.sdk import Cerebras
+
+  client = Cerebras()
+
+  response = client.chat.completions.create(
+      model="zai-glm-4.7",
+      messages=[
+          {
+              "role": "user",
+              "content": "Can you help me with this?"
+          }
+      ],
+      logprobs=True,
+      reasoning_format="parsed"
+  )
+
+  print(response)
+  ```
+
+  ```json Non-streaming Response theme={null}
+  {
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "I can help you with that!",
+          "reasoning": "Let me think..."
+        },
+        "logprobs": {
+          "content": [
+            {"token": "I", "logprob": -0.1},
+            {"token": " can", "logprob": -0.2},
+            ...
+          ]
+        },
+        "reasoning_logprobs": {
+          "content": [
+            {"token": "Let ", "logprob": -0.3},
+            {"token": "me", "logprob": -0.4},
+            ...
+          ]
+        },
+        "finish_reason": "stop"
+      }
+    ]
+  }
+  ```
+
+  ```json Streaming Response theme={null}
+  {
+    "choices": [
+      {
+        "delta": {
+          "reasoning": " should"
+        },
+        "index": 0
+      }
+    ]
+  }
+  ```
+</CodeGroup>
+
+When streaming, reasoning tokens are delivered in the `reasoning` field of the delta.
+
+### `raw` Format
+
+Reasoning text is included in the `content` field, prepended to the response. For GLM and Qwen models, reasoning is wrapped in `<think>...</think>` tokens. All logprobs are returned together in the standard `logprobs` field.
+
+<Note>
+  Since GPT-OSS does not use thinking tokens, reasoning and content are concatenated without separators when using `raw` format.
+</Note>
+
+<Note>
+  The `raw` format is not compatible with `json_object` or `json_schema` response formats. Models that default to `raw` will automatically use `hidden` instead when structured output is requested.
+</Note>
+
+<CodeGroup>
+  ```python Request theme={null}
+  from cerebras.cloud.sdk import Cerebras
+
+  client = Cerebras()
+
+  response = client.chat.completions.create(
+      model="zai-glm-4.7",
+      messages=[
+          {
+              "role": "user",
+              "content": "Can you help me with this?"
+          }
+      ],
+      logprobs=True,
+      reasoning_format="raw"
+  )
+
+  print(response)
+  ```
+
+  ```json Response theme={null}
+  {
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "<think>Let me think...</think>I can help you with that!"
+        },
+        "logprobs": {
+          "content": [
+            {"token": "Let ", "logprob": -0.3},
+            {"token": "me", "logprob": -0.4},
+            {"token": "I", "logprob": -0.1},
+            {"token": " can", "logprob": -0.2},
+            ...
+          ]
+        },
+        "finish_reason": "stop"
+      }
+    ]
+  }
+  ```
+</CodeGroup>
+
+### `hidden` Format
+
+Reasoning text and reasoning logprobs are dropped completely from the response. The reasoning tokens are still generated and counted toward total completion tokens.
+
+<CodeGroup>
+  ```python Request theme={null}
+  from cerebras.cloud.sdk import Cerebras
+
+  client = Cerebras()
+
+  response = client.chat.completions.create(
+      model="zai-glm-4.7",
+      messages=[
+          {
+              "role": "user",
+              "content": "Can you help me with this?"
+          }
+      ],
+      logprobs=True,
+      reasoning_format="hidden"
+  )
+
+  print(response)
+  ```
+
+  ```json Response theme={null}
+  {
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "I can help you with that!"
+        },
+        "logprobs": {
+          "content": [
+            {"token": "I", "logprob": -0.1},
+            {"token": " can", "logprob": -0.2},
+            ...
+          ]
+        },
+        "finish_reason": "stop"
+      }
+    ]
+  }
+  ```
+</CodeGroup>
+
+***
+
+## Model-Specific Parameters
+
+Each model family has its own parameter for controlling reasoning behavior.
+
+<Note>
+  There are key differences between the OpenAI client and the Cerebras SDK when using non-standard OpenAI parameters. These examples use the Cerebras SDK. For more info, see [Passing Non-Standard Parameters](/resources/openai#passing-non-standard-parameters).
+</Note>
+
+### GPT-OSS: `reasoning_effort`
+
+Use `reasoning_effort` to control how much reasoning the model performs:
+
+* `"low"` - Minimal reasoning, faster responses
+* `"medium"` - Moderate reasoning (default)
+* `"high"` - Extensive reasoning, more thorough analysis
+
+<CodeGroup>
+  ```python Python theme={null}
+  response = client.chat.completions.create(
+      model="gpt-oss-120b",
+      messages=[{"role": "user", "content": "Explain quantum entanglement."}],
+      reasoning_effort="medium"
+  )
+  ```
+
+  ```javascript Node.js theme={null}
+  const response = await client.chat.completions.create({
+      model: "gpt-oss-120b",
+      messages: [{ role: "user", content: "Explain quantum entanglement." }],
+      reasoning_effort: "medium"
+  });
+  ```
+</CodeGroup>
+
+### GLM: `reasoning_effort` and `disable_reasoning`
+
+Reasoning is enabled by default on `zai-glm-4.7`. Use `reasoning_effort="none"` to disable it:
+
+<CodeGroup>
+  ```python Python theme={null}
+  response = client.chat.completions.create(
+      model="zai-glm-4.7",
+      messages=[{"role": "user", "content": "Explain how photosynthesis works."}],
+      reasoning_effort="none"  # Disables reasoning
+  )
+  ```
+
+  ```javascript Node.js theme={null}
+  const response = await client.chat.completions.create({
+      model: "zai-glm-4.7",
+      messages: [{ role: "user", content: "Explain how photosynthesis works." }],
+      reasoning_effort: "none"  // Disables reasoning
+  });
+  ```
+</CodeGroup>
+
+Alternatively, use `disable_reasoning` to toggle reasoning on or off. Set to `true` to disable reasoning, or `false` (default) to enable it.
+
+<CodeGroup>
+  ```python Python theme={null}
+  response = client.chat.completions.create(
+      model="zai-glm-4.7",
+      messages=[{"role": "user", "content": "Explain how photosynthesis works."}],
+      disable_reasoning=False  # Set to True to disable reasoning
+  )
+  ```
+
+  ```javascript Node.js theme={null}
+  const response = await client.chat.completions.create({
+      model: "zai-glm-4.7",
+      messages: [{ role: "user", content: "Explain how photosynthesis works." }],
+      disable_reasoning: false  // Set to true to disable reasoning
+  });
+  ```
+</CodeGroup>
+
+<Warning>
+  `disable_reasoning` is deprecated and will be removed after **July 21, 2026**. Use `reasoning_effort="none"` instead. See the [deprecation notice](/support/deprecation) for details.
+</Warning>
+
+***
+
+## Reasoning Context Retention
+
+Reasoning tokens are not automatically retained across requests. To maintain awareness of prior reasoning in multi-turn conversations, include the reasoning text in the `content` field of the `assistant` message.
+
+Use the same format the model outputs: for GLM and Qwen, include reasoning in `<think>...</think>` tags; for GPT-OSS, prepend reasoning text directly before the answer.
+
+<Tabs>
+  <Tab title="GPT-OSS">
+    <CodeGroup>
+      ```python Python theme={null}
+      # GPT-OSS: reasoning prepended directly before the answer
+      response = client.chat.completions.create(
+          model="gpt-oss-120b",
+          messages=[
+              {"role": "user", "content": "What is 25 * 4?"},
+              {"role": "assistant", "content": "I need to multiply 25 by 4. 25 * 4 = 100. The answer is 100."},
+              {"role": "user", "content": "Now divide that by 2."}
+          ]
+      )
+      ```
+
+      ```javascript Node.js theme={null}
+      // GPT-OSS: reasoning prepended directly before the answer
+      const response = await client.chat.completions.create({
+          model: "gpt-oss-120b",
+          messages: [
+              { role: "user", content: "What is 25 * 4?" },
+              { role: "assistant", content: "I need to multiply 25 by 4. 25 * 4 = 100. The answer is 100." },
+              { role: "user", content: "Now divide that by 2." }
+          ]
+      });
+      ```
+    </CodeGroup>
+  </Tab>
+
+  <Tab title="GLM / Qwen">
+    <CodeGroup>
+      ```python Python theme={null}
+      # GLM/Qwen: reasoning wrapped in <think> tags
+      response = client.chat.completions.create(
+          model="zai-glm-4.7",
+          messages=[
+              {"role": "user", "content": "What is 25 * 4?"},
+              {"role": "assistant", "content": "<think>I need to multiply 25 by 4. 25 * 4 = 100.</think>The answer is 100."},
+              {"role": "user", "content": "Now divide that by 2."}
+          ]
+      )
+      ```
+
+      ```javascript Node.js theme={null}
+      // GLM/Qwen: reasoning wrapped in <think> tags
+      const response = await client.chat.completions.create({
+          model: "zai-glm-4.7",
+          messages: [
+              { role: "user", content: "What is 25 * 4?" },
+              { role: "assistant", content: "<think>I need to multiply 25 by 4. 25 * 4 = 100.</think>The answer is 100." },
+              { role: "user", content: "Now divide that by 2." }
+          ]
+      });
+      ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+> ## Documentation Index
+> Fetch the complete documentation index at: https://inference-docs.cerebras.ai/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+<AgentInstructions>
+
+## Submitting Feedback
+
+If you encounter incorrect, outdated, or confusing documentation on this page, submit feedback:
+
+POST https://inference-docs.cerebras.ai/feedback
+
+```json
+{
+  "path": "/capabilities/streaming",
+  "feedback": "Description of the issue"
+}
+```
+
+Only submit feedback when you have something specific and actionable to report.
+
+</AgentInstructions>
+
+# Streaming Responses
+
+> Learn how to enable streaming responses in the Cerebras API.
+
+<Tip>**To get started with a free API key, [click here](https://cloud.cerebras.ai?utm_source=3pi_streaming\&utm_campaign=capabilities).**</Tip>
+
+The Cerebras API supports streaming responses, allowing messages to be sent back in chunks and displayed incrementally as they are generated. To enable this feature, set the `stream` parameter to `True` within the `chat.completions.create` method. This will result in the API returning an iterable containing the chunks of the message.
+
+Similarly, the same can be done in TypeScript by setting the `stream` property to `true` within the `chat.completions.create` method.
+
+<Steps>
+  <Step title="Initial Setup">
+    Begin by importing the Cerebras SDK and setting up the client.
+
+    <CodeGroup>
+      ```python Python theme={null}
+      import os
+      from cerebras.cloud.sdk import Cerebras
+
+      client = Cerebras(
+          # This is the default and can be omitted
+          api_key=os.environ.get("CEREBRAS_API_KEY"),
+      )
+      ```
+
+      ```javascript Node.js theme={null}
+      import Cerebras from 'cerebras_cloud_sdk';
+
+      const client = new Cerebras({
+        apiKey: process.env['CEREBRAS_API_KEY'], // This is the default and can be omitted
+      });
+      ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Streaming Responses">
+    Set the `stream` parameter to `True` within the `chat.completions.create` method to enable streaming responses.
+
+    <CodeGroup>
+      ```python Python theme={null}
+      stream = client.chat.completions.create(
+          messages=[
+              {
+                  "role": "user",
+                  "content": "Why is fast inference important?",
+              }
+          ],
+          model="gpt-oss-120b",
+          stream=True,
+      )
+
+      for chunk in stream:
+          print(chunk.choices[0].delta.content or "", end="")
+      ```
+
+      ```javascript Node.js theme={null}
+      import Cerebras from 'cerebras_cloud_sdk';
+
+      const client = new Cerebras({
+        apiKey: process.env['CEREBRAS_API_KEY'], // This is the default and can be omitted
+      });
+
+      async function main() {
+        const stream = await client.chat.completions.create({
+          messages: [{ role: 'user', content: 'Why is fast inference important?' }],
+          model: 'gpt-oss-120b',
+          stream: true,
+        });
+        for await (const chunk of stream) {
+          process.stdout.write(chunk.choices[0]?.delta?.content || '');
+        }
+      }
+
+      main();
+      ```
+    </CodeGroup>
+  </Step>
+</Steps>
+
+> ## Documentation Index
+> Fetch the complete documentation index at: https://inference-docs.cerebras.ai/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+<AgentInstructions>
+
+## Submitting Feedback
+
+If you encounter incorrect, outdated, or confusing documentation on this page, submit feedback:
+
+POST https://inference-docs.cerebras.ai/feedback
+
+```json
+{
+  "path": "/capabilities/structured-outputs",
+  "feedback": "Description of the issue"
+}
+```
+
+Only submit feedback when you have something specific and actionable to report.
+
+</AgentInstructions>
+
+# Structured Outputs
+
+> Generate structured data with the Cerebras Inference API
+
+<Tip>
+  [**To get started with a free API key, click here.**](https://cloud.cerebras.ai?utm_source=inferencedocs)
+</Tip>
+
+Structured outputs is a feature that can enforce consistent JSON outputs for models in the Cerebras Inference API. This is particularly useful when building applications that need to process AI-generated data programmatically. Some of the key benefits of using structured outputs are:
+
+* **Reduced Variability**: Ensures consistent outputs by adhering to predefined fields.
+* **Type Safety**: Enforces correct data types, preventing mismatches.
+* **Easier Parsing & Integration**: Enables direct use in applications without extra processing.
+
+## Tutorial: Structured Outputs using Cerebras Inference
+
+In this tutorial, we'll explore how to use structured outputs with the Cerebras Cloud SDK. We'll build a simple application that generates movie recommendations and uses structured outputs to ensure the response is in a consistent JSON format.
+
+<Steps>
+  <Step title="Initial Setup">
+    First, ensure that you have completed steps 1 and 2 of our [Quickstart Guide](/quickstart) to set up your API key and install the Cerebras Cloud SDK.
+
+    Then, initialize the Cerebras client and import the necessary modules we will use in this tutorial.
+
+    <CodeGroup>
+      ```python Python theme={null}
+      import os
+      from cerebras.cloud.sdk import Cerebras
+      import json
+
+      client = Cerebras(
+          api_key=os.environ.get("CEREBRAS_API_KEY")
+      )
+      ```
+
+      ```javascript Node.js theme={null}
+      import Cerebras from '@cerebras/cerebras_cloud_sdk';
+
+      const client = new Cerebras({
+        apiKey: process.env['CEREBRAS_API_KEY']
+      });
+      ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Defining the Schema">
+    To ensure structured responses from the model, we'll use a JSON schema to define our output structure. Start by defining your schema, which specifies the fields, their types, and which ones are required. For our example, we'll define a schema for a movie recommendation that includes the title, director, and year:
+
+    <Warning>
+      Note: For every `required` array you define in your schema, you must set `additionalProperties` to `false`.
+    </Warning>
+
+    <CodeGroup>
+      ```python Python theme={null}
+      movie_schema = {
+          "type": "object",
+          "properties": {
+              "title": {"type": "string"},
+              "director": {"type": "string"},
+              "year": {"type": "integer"},
+          },
+          "required": ["title", "director", "year"],
+          "additionalProperties": False
+      }
+      ```
+
+      ```javascript Node.js theme={null}
+      const movieSchema = {
+          type: "object",
+          properties: {
+              title: { type: "string" },
+              director: { type: "string" }, 
+              year: { type: "integer" },
+          },
+          required: ["title", "director", "year"],
+          additionalProperties: false
+      };
+      ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Using Structured Outputs">
+    Next, use the schema in your API call by setting the `response_format` parameter to include both the type and your schema. Setting `strict` to `true` will enforce the schema. Setting `strict` to `false` will allow the model to return additional fields that are not specified in the schema, similar to [JSON mode](#json-mode).
+
+    <CodeGroup>
+      ```python Python theme={null}
+      completion = client.chat.completions.create(
+          model="gpt-oss-120b",
+          messages=[
+              {"role": "system", "content": "You are a helpful assistant that generates movie recommendations."},
+              {"role": "user", "content": "Suggest a sci-fi movie from the 1990s"}
+          ],
+          response_format={
+              "type": "json_schema", 
+              "json_schema": {
+                  "name": "movie_schema",
+                  "strict": True,
+                  "schema": movie_schema
+              }
+          }
+      )
+
+      # Parse the JSON response
+      movie_data = json.loads(completion.choices[0].message.content)
+      print(json.dumps(movie_data, indent=2))
+      ```
+
+      ```javascript Node.js theme={null}
+      async function main() {
+        const schemaCompletion = await client.chat.completions.create({
+          model: 'gpt-oss-120b',
+          messages: [
+            { role: 'system', content: 'You are a helpful assistant that generates movie recommendations.' },
+            { role: 'user', content: 'Suggest a sci-fi movie from the 1990s' }
+          ],
+          response_format: {
+            type: 'json_schema', 
+            json_schema: {
+              name: 'movie_schema',
+              strict: true,
+              schema: movieSchema
+            }
+          }
+        });
+        
+        // Parse and display the JSON response 
+        const schemaMovieData = JSON.parse(schemaCompletion.choices[0].message.content);
+        console.log('Movie Recommendation:');
+        console.log(JSON.stringify(schemaMovieData, null, 2));
+      }
+      ```
+    </CodeGroup>
+
+    Sample output:
+
+    ```
+    {
+      "title": "Terminator 2: Judgment Day",
+      "director": "James Cameron",
+      "year": 1991
+    }
+    ```
+
+    Now you have a structured JSON response from the model, which can be used in your application.
+  </Step>
+</Steps>
+
+## Understanding Strict Mode
+
+Strict mode guarantees that the model's output will exactly match the JSON schema you provide. When `strict` is set to `true`, Cerebras employs constrained decoding to ensure schema conformance at the token level, making invalid outputs impossible.
+
+### Why Use Strict Mode
+
+Without strict mode, you may encounter:
+
+* Malformed JSON that fails to parse
+* Missing required fields
+* Incorrect data types (e.g., `"16"` instead of `16`)
+* Extra fields not defined in your schema
+
+With strict model enabled, you get:
+
+* *Guaranteed* valid JSON
+* Schema compliance: Every field matches your specification
+* Type safety: Correct data types for all properties
+* No retries needed: Eliminates error handling for schema violations
+
+### Enabling Strict Mode
+
+Set `strict` to `true` in your `response_format` configuration:
+
+```python theme={null}
+response_format={
+    "type": "json_schema",
+    "json_schema": {
+        "name": "my_schema",
+        "strict": True,  # Enable constrained decoding
+        "schema": your_schema
+    }
+}
+```
+
+### Schema Requirements for Strict Mode
+
+When using strict mode, you must set `additionalProperties: false`. This is required for every object in your schema.
+
+### Limitations in Strict Mode
+
+When strict mode is enabled, your schema must conform to specific requirements. See the [Supported Schemas](#supported-schemas) section for detailed information on constraints, limits, and unsupported features.
+
+## Schema References and Definitions
+
+You can use `$ref` with `$defs` to define reusable schema components within your JSON schema. This is useful for avoiding repetition and creating more maintainable schemas.
+
+```python highlight={5,7-8} theme={null}
+schema_with_defs = {
+    "type": "object",
+    "properties": {
+        "title": {"type": "string"},
+        "director": {"$ref": "#/$defs/person"},
+        "year": {"type": "integer"},
+        "lead_actor": {"$ref": "#/$defs/person"},
+        "studio": {"$ref": "#/$defs/studio"}
+    },
+    "required": ["title", "director", "year"],
+    "additionalProperties": False,
+    "$defs": {
+        "person": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "age": {"type": "integer"}
+            },
+            "required": ["name"],
+            "additionalProperties": False
+        },
+        "studio": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "founded": {"type": "integer"},
+                "headquarters": {"type": "string"}
+            },
+            "required": ["name"],
+            "additionalProperties": False
+        }
+    }
+}
+```
+
+## Supported Schemas
+
+Structured Outputs supports a subset of [JSON Schema](https://json-schema.org/docs). This section outlines the supported types, properties, and constraints.
+
+### Supported Types
+
+The following types are supported for Structured Outputs:
+
+| Type      | Description                       |
+| --------- | --------------------------------- |
+| `string`  | Text values                       |
+| `number`  | Numeric values (floating point)   |
+| `integer` | Whole number values               |
+| `boolean` | True/false values                 |
+| `object`  | Nested objects with properties    |
+| `array`   | Lists of items                    |
+| `enum`    | Constrained set of allowed values |
+| `null`    | Null values                       |
+| `anyOf`   | Union types                       |
+
+### Schema Constraints
+
+When using strict mode, the following constraints apply:
+
+| Constraint                | Limit                                           |
+| ------------------------- | ----------------------------------------------- |
+| Maximum schema length     | 5,000 characters                                |
+| Maximum nesting depth     | 10 levels                                       |
+| Maximum object properties | 500                                             |
+| Maximum total enum values | 500 across all enum properties                  |
+| Single enum string length | 7,500 characters (when > 250 total enum values) |
+
+### Required Schema Structure
+
+All schemas must follow these rules:
+
+* **Root must be an object**: The top-level schema must have `"type": "object"`.
+* **No additional properties**: You must set `"additionalProperties": false` for every object in your schema.
+
+<Note>
+  Schemas that do not follow these rules may be allowed in some cases today. Starting **July 21, 2026**, these requirements will be strictly enforced for all models and non-conforming schemas will return a validation error. To ensure forward compatibility, always follow these rules in your schema definitions. For more information about API versioning and deprecation timelines, see [API Versions](/api-reference/versions).
+</Note>
+
+### Supported Features
+
+Your schema can include the following JSON Schema features:
+
+* **Nested structures**: Define complex objects with nested properties.
+* **Required fields**: Specify which fields must be present.
+* **Enums (value constraints)**: Use the `enum` keyword to whitelist the exact literals a field may take. See `rating` in the example below.
+* **Schema references**: Use `$ref` with `$defs` to define reusable schema components within your schema.
+* **Tuple validation**: `items: false` is supported when used with `prefixItems` for tuple-like arrays.
+* **Number constraints**: Use `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, and `multipleOf` to constrain `number` and `integer` values.
+
+### Unsupported Features
+
+The following JSON Schema features are **not** supported in strict mode:
+
+| Feature              | Notes                                                                            |
+| -------------------- | -------------------------------------------------------------------------------- |
+| Recursive schemas    | Self-referencing schemas are not supported                                       |
+| External `$ref`      | References to external URLs are blocked for security                             |
+| `$anchor` keyword    | Use relative paths within definitions instead                                    |
+| `items: true`        | Not supported for array types                                                    |
+| Informational fields | Additional fields meant as guidelines (not used in validation) are not supported |
+| String `pattern`     | Regular expression constraints on strings are not supported                      |
+| String `format`      | Format validation (e.g., `email`, `date-time`, `uuid`) is not supported          |
+| Array constraints    | `minItems`, `maxItems` are not supported                                         |
+
+### Example: Complex Schema
+
+For example, a more complex schema might look like:
+
+```python theme={null}
+detailed_schema = {
+    "type": "object",
+    "properties": {
+        "title": {"type": "string"},
+        "director": {"type": "string"},
+        "year": {"type": "integer"},
+        "genres": {
+            "type": "array",
+            "items": {"type": "string"}
+        },
+        "rating": {
+            "type": "string",
+            "enum": ["G", "PG", "PG‑13", "R"]
+        },
+        "cast": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "role": {"type": "string"}
+                },
+                "required": ["name"],
+                "additionalProperties": False
+            }
+        }
+    },
+    "required": ["title", "director", "year", "genres"],
+    "additionalProperties": False
+}
+```
+
+When used with the API, you might get a response like:
+
+```json theme={null}
+{
+  "title": "Jurassic Park",
+  "director": "Steven Spielberg",
+  "year": 1993,
+  "genres": ["Science Fiction", "Adventure", "Thriller"],
+  "cast": [
+    {"name": "Sam Neill", "role": "Dr. Alan Grant"},
+    {"name": "Laura Dern", "role": "Dr. Ellie Sattler"},
+    {"name": "Jeff Goldblum", "role": "Dr. Ian Malcolm"}
+  ]
+}
+```
+
+### Key Ordering
+
+The keys in the generated JSON output will appear in the same order as they are defined in your schema.
+
+## Working with Pydantic and Zod
+
+Besides defining a JSON schema manually, you can use Pydantic (Python) or Zod (JavaScript) to create your schema and convert it to JSON. Pydantic's `model_json_schema` and Zod's `zodToJsonSchema` methods generate the JSON schema, which can then be used in the API call, as demonstrated in the workflow above.
+
+<CodeGroup>
+  ```python Python (Pydantic) theme={null}
+  from pydantic import BaseModel
+  import json
+
+  # Define your schema using Pydantic
+  class Movie(BaseModel):
+      title: str
+      director: str 
+      year: int 
+
+  # Convert the Pydantic model to a JSON schema
+  movie_schema = Movie.model_json_schema()
+
+  # Print the JSON schema to verify it
+  print(json.dumps(movie_schema, indent=2))
+  ```
+
+  ```javascript Node.js (Zod) theme={null}
+  import { z } from 'zod';
+  import { zodToJsonSchema } from 'zod-to-json-schema';
+
+  // Define your schema using Zod
+  const MovieSchema = z.object({
+    title: z.string(),
+    director: z.string(),
+    year: z.number().int()
+  });
+
+  // Convert the Zod schema to a JSON schema
+  const movieJsonSchema = zodToJsonSchema(MovieSchema, { name: 'movie_schema' });
+
+  // Print the JSON schema to verify it
+  console.log(JSON.stringify(movieJsonSchema, null, 2));
+  ```
+</CodeGroup>
+
+## JSON Mode
+
+JSON mode is an alternative to structured outputs that generates JSON responses without enforcing a specific schema. The model decides what fields to include based on the context of your prompt.
+
+<Note>
+  We recommend using structured outputs with `strict` set to `true` instead of JSON mode whenever possible. Structured outputs guarantee schema adherence, while JSON mode only ensures valid JSON without enforcing a specific structure.
+</Note>
+
+To use JSON mode, set the `response_format` parameter to `json_object` and include instructions in your message asking the model to respond in JSON format:
+
+<CodeGroup>
+  ```python Python theme={null}
+  completion = client.chat.completions.create(
+      model="gpt-oss-120b",
+      messages=[
+        {"role": "system", "content": "You are a helpful assistant that generates movie recommendations. Respond with JSON."},
+        {"role": "user", "content": "Suggest a sci-fi movie from the 1990s"}
+      ],
+      response_format={"type": "json_object"}
+  )
+  ```
+
+  ```javascript Node.js theme={null}
+  async function main() {
+    const jsonModeCompletion = await client.chat.completions.create({
+      model: 'gpt-oss-120b',
+      messages: [
+        { role: 'system', content: 'You are a helpful assistant that generates movie recommendations. Respond with JSON.' },
+        { role: 'user', content: 'Suggest a sci-fi movie from the 1990s' }
+      ],
+      response_format: {
+        type: 'json_object'
+      }
+    });
+  }
+  ```
+</CodeGroup>
+
+### Structured Outputs vs JSON Mode
+
+The table below summarizes the key differences between Structured Outputs and JSON Mode:
+
+| Feature              | Structured Outputs                                                                         | JSON Mode                                  |
+| -------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------ |
+| Outputs valid JSON   | Yes                                                                                        | Yes                                        |
+| Enforces schema      | Yes (when `strict: true`)                                                                  | No                                         |
+| Constrained decoding | Yes (when `strict: true`)                                                                  | No                                         |
+| Configuration        | `response_format: { type: "json_schema", json_schema: { "strict": true, "schema": ... } }` | `response_format: { type: "json_object" }` |
+
+<Warning>
+  `tools` and `response_format` cannot be used in the same request.
+</Warning>
+
+## Conclusion
+
+Structured outputs with JSON schema enforcement ensures your AI-generated responses follow a consistent, predictable format. This makes it easier to build reliable applications that can process AI outputs programmatically without worrying about unexpected data structures or missing fields.
+
+Check out some of our other tutorials to learn more about other features of the Cerebras Inference SDK:
+
+* [Tool Use](/capabilities/tool-use): extending models' capabilities to access tools to answer questions and perform actions
+* [Streaming](/capabilities/streaming): a feature for streaming responses from the model
+* [CePO](/capabilities/cepo): a reasoning framework for improving reasoning model abilities with test-time compute
+
+> ## Documentation Index
+> Fetch the complete documentation index at: https://inference-docs.cerebras.ai/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+<AgentInstructions>
+
+## Submitting Feedback
+
+If you encounter incorrect, outdated, or confusing documentation on this page, submit feedback:
+
+POST https://inference-docs.cerebras.ai/feedback
+
+```json
+{
+  "path": "/dedicated/overview",
+  "feedback": "Description of the issue"
+}
+```
+
+Only submit feedback when you have something specific and actionable to report.
+
+</AgentInstructions>
+
+# Dedicated Endpoints
+
+> Deploy private, high-performance inference endpoints for enterprise workloads.
+
+A dedicated endpoint is a private, provisioned instance of the Cerebras Inference service reserved exclusively for your organization. Your traffic runs on reserved capacity, ensuring latency and throughput are not affected by other users.
+
+Dedicated endpoints are intended for production workloads that require predictable performance—such as real-time applications, customer-facing products, and high-volume pipelines that need guaranteed capacity. See supported models [here](#supported-models).
+
+**Key Benefits**
+
+<AccordionGroup>
+  <Accordion title="Dedicated capacity">
+    Your endpoint runs on reserved capacity that is not shared with other customers, so your performance is never impacted by other workloads.
+  </Accordion>
+
+  <Accordion title="Consistent latency and throughput">
+    Performance is reserved and predictable, even under load.
+  </Accordion>
+
+  <Accordion title="Bring your own weights">
+    Deploy your custom fine-tuned models alongside standard model variants.
+  </Accordion>
+
+  <Accordion title="Performance customization">
+    Tailor your endpoint to match the performance and scale requirements of your workload through bespoke draft models, model configurations, and quantization strategies.
+  </Accordion>
+
+  <Accordion title="Exclusive access to advanced features">
+    All capabilities available on shared endpoints are available on dedicated endpoints. In addition, dedicated customers get access to advanced features including fine-tuning, weight management, and enhanced service tier controls.
+  </Accordion>
+</AccordionGroup>
+
+To get started with a dedicated endpoint, [contact us](https://www.cerebras.ai/contact).
+
+## Supported Models
+
+Dedicated endpoints support a broad range of model families, including multiple versions, parameter sizes, and weight variations (e.g., `-instruct` and `-thinking`) as well as your own custom weights. We can also work with you to tune your endpoint configuration to meet your specific performance goals.
+
+For models that are natively multimodal, we currently support text-only inference, with multimodal support coming soon.
+
+<AccordionGroup>
+  <Accordion title="Alibaba Qwen — Qwen3, Qwen3-Coder" icon="https://mintcdn.com/cerebras-inference/k52j3v9j3Q8jlYv7/images/icons/qwen.svg?fit=max&auto=format&n=k52j3v9j3Q8jlYv7&q=85&s=5f17b5e6222779e638a8c283f8e511a8" width="16" height="16" data-path="images/icons/qwen.svg">
+    **Qwen3-235B-A22B**
+
+    * [Qwen/Qwen3-235B-A22B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-235B-A22B-Instruct-2507)
+    * [Qwen/Qwen3-235B-A22B-Thinking-2507](https://huggingface.co/Qwen/Qwen3-235B-A22B-Thinking-2507)
+
+    **Qwen3-32B**
+
+    * [Qwen/Qwen3-32B](https://huggingface.co/Qwen/Qwen3-32B)
+
+    **Qwen3-30B-A3B**
+
+    * [Qwen/Qwen3-30B-A3B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-30B-A3B-Instruct-2507)
+    * [Qwen/Qwen3-30B-A3B-Thinking-2507](https://huggingface.co/Qwen/Qwen3-30B-A3B-Thinking-2507)
+
+    **Small & Tiny Variants**
+
+    * [Qwen/Qwen3-14B](https://huggingface.co/Qwen/Qwen3-14B)
+    * [Qwen/Qwen3-8B](https://huggingface.co/Qwen/Qwen3-8B)
+    * [Qwen/Qwen3-1.7B](https://huggingface.co/Qwen/Qwen3-1.7B)
+    * [Qwen/Qwen3-0.6B](https://huggingface.co/Qwen/Qwen3-0.6B)
+
+    **Qwen3-Coder**
+
+    * [Qwen/Qwen3-Coder-480B-A35B-Instruct](https://huggingface.co/Qwen/Qwen3-Coder-480B-A35B-Instruct)
+    * [Qwen/Qwen3-Coder-30B-A3B-Instruct](https://huggingface.co/Qwen/Qwen3-Coder-30B-A3B-Instruct)
+  </Accordion>
+
+  <Accordion title="OpenAI (OSS) — GPT-OSS" icon="openai">
+    * [openai/gpt-oss-120b](https://huggingface.co/openai/gpt-oss-120b)
+    * [openai/gpt-oss-safeguard-120b](https://huggingface.co/openai/gpt-oss-safeguard-120b)
+    * [openai/gpt-oss-20b](https://huggingface.co/openai/gpt-oss-20b)
+  </Accordion>
+
+  <Accordion title="MiniMax — MiniMax M2.X" icon="https://mintcdn.com/cerebras-inference/k52j3v9j3Q8jlYv7/images/icons/minimax.svg?fit=max&auto=format&n=k52j3v9j3Q8jlYv7&q=85&s=bb972b9e03b7f218e5d2776a141c29cb" width="24" height="24" data-path="images/icons/minimax.svg">
+    * [MiniMaxAI/MiniMax-M2.5](https://huggingface.co/MiniMaxAI/MiniMax-M2.5)
+    * [MiniMaxAI/MiniMax-M2.1](https://huggingface.co/MiniMaxAI/MiniMax-M2.1)
+  </Accordion>
+
+  <Accordion title="Meta — Llama 3, Llama 4" icon="meta">
+    * [meta-llama/Llama-4-Maverick-17B-128E-Instruct](https://huggingface.co/meta-llama/Llama-4-Maverick-17B-128E-Instruct) (402B total)
+    * [meta-llama/Llama-4-Scout-17B-16E-Instruct](https://huggingface.co/meta-llama/Llama-4-Scout-17B-16E-Instruct) (109B total)
+    * [meta-llama/Llama-3.3-70B-Instruct](https://huggingface.co/meta-llama/Llama-3.3-70B-Instruct)
+  </Accordion>
+
+  <Accordion title="Mistral — Mistral Small, Mistral Large 3, Devstral 2, Mixtral" icon="https://mintcdn.com/cerebras-inference/k52j3v9j3Q8jlYv7/images/icons/mistralai.svg?fit=max&auto=format&n=k52j3v9j3Q8jlYv7&q=85&s=5e1e79f16460060e9825edacec580636" width="24" height="24" data-path="images/icons/mistralai.svg">
+    * [mistralai/Mistral-Large-3-675B-Instruct-2512](https://huggingface.co/mistralai/Mistral-Large-3-675B-Instruct-2512)
+    * [mistralai/Mistral-Small-24B-Instruct-2501](https://huggingface.co/mistralai/Mistral-Small-24B-Instruct-2501)
+    * [mistralai/Devstral-Small-2-24B-Instruct-2512](https://huggingface.co/mistralai/Devstral-Small-2-24B-Instruct-2512)
+    * [mistralai/Mathstral-7B-v0.1](https://huggingface.co/mistralai/Mathstral-7B-v0.1)
+    * [mistralai/Codestral-22B-v0.1](https://huggingface.co/mistralai/Codestral-22B-v0.1)
+  </Accordion>
+
+  <Accordion title="Z.AI — GLM 4.X, GLM 5.X" icon="https://mintcdn.com/cerebras-inference/k52j3v9j3Q8jlYv7/images/icons/zai.svg?fit=max&auto=format&n=k52j3v9j3Q8jlYv7&q=85&s=06535f5280d8d19ba786406c66be6cf4" width="24" height="24" data-path="images/icons/zai.svg">
+    * [zai-org/GLM-5.1](https://huggingface.co/zai-org/GLM-5.1)
+    * [zai-org/GLM-5](https://huggingface.co/zai-org/GLM-5)
+    * [zai-org/GLM-4.7](https://huggingface.co/zai-org/GLM-4.7)
+    * [zai-org/GLM-4.7-Flash](https://huggingface.co/zai-org/GLM-4.7-Flash)
+    * [zai-org/GLM-4.6](https://huggingface.co/zai-org/GLM-4.6)
+    * [zai-org/GLM-4.5](https://huggingface.co/zai-org/GLM-4.5)
+    * [zai-org/GLM-4.5-air](https://huggingface.co/zai-org/GLM-4.5-air)
+  </Accordion>
+
+  <Accordion title="Moonshot AI — Kimi K2.X" icon="https://mintcdn.com/cerebras-inference/k52j3v9j3Q8jlYv7/images/icons/moonshot.svg?fit=max&auto=format&n=k52j3v9j3Q8jlYv7&q=85&s=580edaa8ea7ace796f411c7244dddb25" width="24" height="24" data-path="images/icons/moonshot.svg">
+    * [moonshotai/Kimi-K2.6](https://huggingface.co/moonshotai/Kimi-K2.6)
+    * [moonshotai/Kimi-K2.5](https://huggingface.co/moonshotai/Kimi-K2.5)
+    * [moonshotai/Kimi-K2-Instruct](https://huggingface.co/moonshotai/Kimi-K2-Instruct)
+    * [moonshotai/Kimi-K2-Thinking](https://huggingface.co/moonshotai/Kimi-K2-Thinking)
+  </Accordion>
+
+  <Accordion title="DeepSeek — DeepSeek V3.X" icon="https://mintcdn.com/cerebras-inference/k52j3v9j3Q8jlYv7/images/icons/deepseek.svg?fit=max&auto=format&n=k52j3v9j3Q8jlYv7&q=85&s=538f34c14c52d24010db84d0332cce36" width="16" height="16" data-path="images/icons/deepseek.svg">
+    * [deepseek-ai/DeepSeek-V3.2](https://huggingface.co/deepseek-ai/DeepSeek-V3.2)
+    * [deepseek-ai/DeepSeek-V3.1](https://huggingface.co/deepseek-ai/DeepSeek-V3.1)
+    * [deepseek-ai/DeepSeek-V3](https://huggingface.co/deepseek-ai/DeepSeek-V3)
+  </Accordion>
+
+  <Accordion title="ByteDance — OSS Seed" icon="https://mintcdn.com/cerebras-inference/k52j3v9j3Q8jlYv7/images/icons/bytedance.svg?fit=max&auto=format&n=k52j3v9j3Q8jlYv7&q=85&s=d90cbc6eb08537be002ff8bcfe3d0ca6" width="24" height="24" data-path="images/icons/bytedance.svg">
+    * [ByteDance-Seed/Seed-OSS-36B-Instruct](https://huggingface.co/ByteDance-Seed/Seed-OSS-36B-Instruct)
+  </Accordion>
+
+  <Accordion title="ServiceNow — Apriel" icon="https://mintcdn.com/cerebras-inference/k52j3v9j3Q8jlYv7/images/icons/servicenow.svg?fit=max&auto=format&n=k52j3v9j3Q8jlYv7&q=85&s=9b7890d5d3b44e7363d4a70ca3b6b7b1" width="24" height="24" data-path="images/icons/servicenow.svg">
+    * [ServiceNow-AI/Apriel-1.6-15b-Thinker](https://huggingface.co/ServiceNow-AI/Apriel-1.6-15b-Thinker)
+  </Accordion>
+
+  <Accordion title="Coming soon: multimodal" icon="photo-film">
+    * Qwen3-VL
+    * GLM 4.6V
+    * Kimi K2.6
+    * Gemma 4
+    * Pixtral Large
+  </Accordion>
+</AccordionGroup>
+
+## Features
+
+Dedicated endpoints include all shared endpoints capabilities, plus:
+
+* **Fine-tuning** — Deploy custom model weights on your dedicated endpoint.
+* **[Management API](/dedicated/management-api)** — Programmatically manage models, capacity, and endpoints.
+* **[Batch API](/capabilities/batch)** — Run large-scale asynchronous workloads against your reserved capacity.
+* **[Service tiers](/capabilities/service-tiers)** — Configure request prioritization to match your SLA requirements.
+* **[Metrics](/capabilities/metrics)** — Monitor your endpoint with Prometheus-compatible metrics for requests, tokens, latency, and health.
+
+## Get Started
+
+Dedicated endpoints are available to enterprise customers. [Contact us](https://www.cerebras.ai/contact) to discuss your requirements.

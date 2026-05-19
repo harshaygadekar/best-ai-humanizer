@@ -57,7 +57,7 @@ export default function Home() {
   const outputWords = wordCount(output);
 
   function startCooldown() {
-    setCooldown(45);
+    setCooldown(10);
     if (cooldownRef.current) clearInterval(cooldownRef.current);
     cooldownRef.current = setInterval(() => {
       setCooldown((prev) => {

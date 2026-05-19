@@ -62,7 +62,7 @@ async function callSapling(text: string): Promise<{
 // Run diagnostics
 // ---------------------------------------------------------------------------
 
-async function main() {
+export async function main() {
   console.log("=" .repeat(80));
   console.log("SAPLING AI DETECT — DIAGNOSTIC REPORT");
   console.log("=" .repeat(80));

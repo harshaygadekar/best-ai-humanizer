@@ -187,7 +187,7 @@ async function runLLMAudit(text: string): Promise<AuditResult> {
 // Run validation
 // ---------------------------------------------------------------------------
 
-async function main() {
+export async function main() {
   console.log("=".repeat(80));
   console.log("LLM AUDIT VALIDATION REPORT");
   console.log("=".repeat(80));

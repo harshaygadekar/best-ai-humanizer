@@ -391,6 +391,25 @@ button {
   animation: shimmer 1.3s ease-in-out infinite;
 }
 
+.warningBox {
+  margin-top: 12px;
+  border: 1px solid rgba(255, 193, 77, 0.45);
+  border-radius: 8px;
+  background: rgba(255, 193, 77, 0.08);
+  color: #ffe0a3;
+  padding: 10px 14px;
+  line-height: 1.45;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.warningBox svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
 .errorBox {
   margin-top: 12px;
   border: 1px solid rgba(255, 143, 143, 0.45);
@@ -636,6 +655,14 @@ button {
   margin: 4px 0 0;
   font-size: 13px;
   color: var(--muted);
+  line-height: 1.4;
+}
+
+.reliabilityNote {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #fbbf24;
+  font-style: italic;
   line-height: 1.4;
 }
 

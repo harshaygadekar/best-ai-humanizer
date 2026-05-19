@@ -88,7 +88,10 @@ export async function handleHumanizeRequest(body: HumanizeBody, deps: HumanizeHa
 }
 
 function normalizePrimaryProvider(value: string): ProviderId {
-  if (value === "ollama-cloud") return "ollama-cloud";
-  if (value === "cerebras") return "cerebras";
-  return "cerebras"; // default to cerebras
+  const map: Record<string, ProviderId> = {
+    cerebras: "cerebras",
+    groq: "groq",
+    "ollama-cloud": "ollama-cloud",
+  };
+  return map[value] ?? "cerebras";
 }

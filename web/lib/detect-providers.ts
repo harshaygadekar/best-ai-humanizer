@@ -12,7 +12,8 @@ export type DetectorId =
   | "zerogpt"
   | "copyleaks"
   | "winston"
-  | "originality";
+  | "originality"
+  | "llm-audit";
 
 export type DetectorStatus = "pass" | "fail" | "error" | "skipped";
 
@@ -31,6 +32,8 @@ export type DetectionReport = {
   flaggedCount: number;
   totalChecked: number;
   detectors: DetectorResult[];
+  reliabilityWarning?: string;
+  controlScore?: number;
 };
 
 // ---------------------------------------------------------------------------
@@ -45,6 +48,7 @@ export type DetectorEnvKeys = {
   copyleaksApiKey?: string;
   winstonApiKey?: string;
   originalityApiKey?: string;
+  cerebrasApiKey?: string;
 };
 
 // ---------------------------------------------------------------------------
@@ -94,16 +98,48 @@ async function detectSapling(text: string, apiKey: string): Promise<DetectorResu
   const id: DetectorId = "sapling";
   const name = "Sapling.ai";
   try {
+    console.log(`[Sapling] Sending request — text length: ${text.length} chars, ~${text.split(/\s+/).length} words`);
+    console.log(`[Sapling] Text preview: "${text.slice(0, 200)}..."`);
+
     const res = await fetchWithTimeout("https://api.sapling.ai/api/v1/aidetect", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key: apiKey, text }),
+      body: JSON.stringify({ key: apiKey, text, sent_scores: true }),
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = (await res.json()) as { score?: number };
+
+    if (!res.ok) {
+      const errorBody = await res.text().catch(() => "");
+      console.log(`[Sapling] HTTP ERROR ${res.status}: ${errorBody.slice(0, 500)}`);
+      throw new Error(`HTTP ${res.status}: ${errorBody.slice(0, 200)}`);
+    }
+
+    const data = (await res.json()) as {
+      score?: number;
+      sentence_scores?: Array<{ score: number; sentence: string }>;
+      text?: string;
+    };
+
+    // Log the full raw response
+    console.log(`[Sapling] RAW RESPONSE:`, JSON.stringify({
+      score: data.score,
+      sentence_count: data.sentence_scores?.length ?? 0,
+    }));
+
+    // Log per-sentence breakdown so we can see which sentences are flagged
+    if (data.sentence_scores?.length) {
+      console.log(`[Sapling] SENTENCE-LEVEL BREAKDOWN:`);
+      for (const s of data.sentence_scores) {
+        const label = s.score >= 0.5 ? "🔴 AI" : "🟢 HUMAN";
+        console.log(`  ${label} (${(s.score * 100).toFixed(1)}%) → "${s.sentence.slice(0, 120)}"`);
+      }
+    }
+
     const score = typeof data.score === "number" ? data.score * 100 : 0;
+    console.log(`[Sapling] FINAL SCORE: ${score.toFixed(1)}% AI (raw: ${data.score})`);
+
     return scored(id, name, score);
   } catch (err) {
+    console.log(`[Sapling] EXCEPTION:`, err instanceof Error ? err.message : String(err));
     return errored(id, name, err instanceof Error ? err.message : String(err));
   }
 }
@@ -245,6 +281,89 @@ async function detectOriginality(text: string, apiKey: string): Promise<Detector
 }
 
 // ---------------------------------------------------------------------------
+// LLM-based AI detection (FREE — uses existing Cerebras API key)
+// ---------------------------------------------------------------------------
+
+const LLM_DETECT_PROMPT = `You are an AI content detection expert. Analyze the following text and determine the probability it was written by AI.
+
+Evaluate these specific signals:
+1. PERPLEXITY: Are word choices predictable/formulaic or creative/surprising?
+2. BURSTINESS: Does sentence length vary naturally (mix of short and long) or is it uniform?
+3. VOCABULARY: Does it use AI-signature words (delve, tapestry, crucial, landscape, furthermore, moreover, underscores, fosters, showcases, leveraging, facilitating, multifaceted, paramount, endeavor)?
+4. STRUCTURE: Are paragraphs similarly sized? Do sentences follow repetitive patterns?
+5. HEDGING: Excessive "It is important to note", "It's worth mentioning", "One could argue" type phrases?
+6. CADENCE: Does it have a rhythmic, polished-but-sterile flow typical of LLMs?
+
+Return ONLY valid JSON:
+{"ai_probability": <number 0-100>, "confidence": "low"|"medium"|"high", "signals": ["<brief signal found>", ...]}
+
+Do not wrap in markdown fences. Do not add explanation outside the JSON.`;
+
+async function detectWithLLM(text: string, apiKey: string): Promise<DetectorResult> {
+  const id: DetectorId = "llm-audit";
+  const name = "LLM Audit";
+  try {
+    console.log(`[LLM Audit] Analyzing text — ${text.length} chars, ~${text.split(/\s+/).length} words`);
+
+    const res = await fetchWithTimeout(
+      "https://api.cerebras.ai/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-oss-120b",
+          messages: [
+            { role: "system", content: LLM_DETECT_PROMPT },
+            { role: "user", content: text },
+          ],
+          temperature: 0.1,
+          max_completion_tokens: 512,
+        }),
+      },
+      15000
+    );
+
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      console.log(`[LLM Audit] HTTP ERROR ${res.status}: ${body.slice(0, 300)}`);
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    const payload = (await res.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+    const raw = payload.choices?.[0]?.message?.content ?? "";
+    console.log(`[LLM Audit] RAW RESPONSE: ${raw.slice(0, 500)}`);
+
+    // Parse JSON from the response
+    const jsonStart = raw.indexOf("{");
+    const jsonEnd = raw.lastIndexOf("}");
+    if (jsonStart === -1 || jsonEnd <= jsonStart) {
+      throw new Error("No valid JSON in LLM response");
+    }
+    const parsed = JSON.parse(raw.slice(jsonStart, jsonEnd + 1)) as {
+      ai_probability?: number;
+      confidence?: string;
+      signals?: string[];
+    };
+
+    const aiPct = typeof parsed.ai_probability === "number" ? parsed.ai_probability : 50;
+    console.log(`[LLM Audit] RESULT: ${aiPct}% AI (confidence: ${parsed.confidence || "unknown"})`);
+    if (parsed.signals?.length) {
+      console.log(`[LLM Audit] SIGNALS: ${parsed.signals.join("; ")}`);
+    }
+
+    return scored(id, name, aiPct);
+  } catch (err) {
+    console.log(`[LLM Audit] EXCEPTION:`, err instanceof Error ? err.message : String(err));
+    return errored(id, name, err instanceof Error ? err.message : String(err));
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Orchestrator
 // ---------------------------------------------------------------------------
 
@@ -276,29 +395,83 @@ export async function runAllDetectors(
     env.originalityApiKey
       ? detectOriginality(text, env.originalityApiKey)
       : Promise.resolve(skipped("originality", "Originality.ai")),
+
+    // LLM-based detection — FREE, uses existing Cerebras API key
+    env.cerebrasApiKey
+      ? detectWithLLM(text, env.cerebrasApiKey)
+      : Promise.resolve(skipped("llm-audit", "LLM Audit")),
   ];
+
+  // Run a control check — send known human text through Sapling to detect
+  // unreliable API keys/configurations. If even this scores high, Sapling
+  // is not giving us trustworthy results.
+  const CONTROL_TEXT = "I burned dinner last night because I got distracted reading about volcanoes. My daughter thought it was hilarious. She kept asking if the pasta was made with real lava. We ended up ordering pizza and she told the delivery guy the whole story.";
+  const controlTask = env.saplingApiKey
+    ? detectSapling(CONTROL_TEXT, env.saplingApiKey)
+    : null;
 
   const settled = await Promise.allSettled(tasks);
 
   const detectors: DetectorResult[] = settled.map((result, i) => {
     if (result.status === "fulfilled") return result.value;
-    // Should not normally happen since each adapter catches internally
-    const names = ["Sapling.ai", "GPTZero", "ZeroGPT", "Copyleaks", "Winston AI", "Originality.ai"];
-    const ids: DetectorId[] = ["sapling", "gptzero", "zerogpt", "copyleaks", "winston", "originality"];
+    const names = ["Sapling.ai", "GPTZero", "ZeroGPT", "Copyleaks", "Winston AI", "Originality.ai", "LLM Audit"];
+    const ids: DetectorId[] = ["sapling", "gptzero", "zerogpt", "copyleaks", "winston", "originality", "llm-audit"];
     return errored(ids[i], names[i], "Unexpected failure");
   });
 
+  // Check control result for reliability
+  let controlScore: number | null = null;
+  let reliabilityWarning: string | undefined;
+  if (controlTask) {
+    try {
+      const controlResult = await controlTask;
+      controlScore = controlResult.aiScore;
+      console.log(`[Control Check] Known-human text scored ${controlScore}% AI on Sapling`);
+      if (controlScore > 70) {
+        reliabilityWarning = `⚠️ Sapling may be unreliable — it scored known human text at ${controlScore}% AI. Scores shown may be inflated.`;
+        console.log(`[Control Check] WARNING: ${reliabilityWarning}`);
+      }
+    } catch {
+      console.log("[Control Check] Control text check failed, skipping reliability check.");
+    }
+  }
+
+  // When Sapling failed the control check, exclude it from the scoring average
+  // so it doesn't pollute the overall % with its inflated numbers.
+  const scoringPool = reliabilityWarning
+    ? detectors.filter((d) => (d.status === "pass" || d.status === "fail") && d.id !== "sapling")
+    : detectors.filter((d) => d.status === "pass" || d.status === "fail");
+
   const successful = detectors.filter((d) => d.status === "pass" || d.status === "fail");
+  const erroredDetectors = detectors.filter((d) => d.status === "error");
+  const skippedDetectors = detectors.filter((d) => d.status === "skipped");
   const totalChecked = successful.length;
   const flaggedCount = successful.filter((d) => d.status === "fail").length;
+
+  // Use the filtered scoring pool for the overall % so unreliable detectors
+  // don't skew the average
   const overallAiPercent =
-    totalChecked > 0
-      ? Math.round(successful.reduce((sum, d) => sum + d.aiScore, 0) / totalChecked)
+    scoringPool.length > 0
+      ? Math.round(scoringPool.reduce((sum, d) => sum + d.aiScore, 0) / scoringPool.length)
       : 0;
 
   let verdict: string;
-  if (totalChecked === 0) {
+  if (totalChecked === 0 && erroredDetectors.length > 0) {
+    const errorMsgs = erroredDetectors
+      .map((d) => `${d.name}: ${d.error || "unknown error"}`)
+      .join("; ");
+    verdict = `All detectors encountered errors — ${errorMsgs}`;
+  } else if (totalChecked === 0 && skippedDetectors.length === detectors.length) {
+    verdict = "No detectors configured";
+  } else if (totalChecked === 0) {
     verdict = "No detectors available";
+  } else if (reliabilityWarning) {
+    // If the control check failed, override the verdict with a reliability warning
+    verdict = overallAiPercent < 30
+      ? "Mostly human-written (detector may be unreliable)"
+      : overallAiPercent <= 70
+        ? "Mixed content (detector may be unreliable)"
+        : "Flagged as AI (but detector may be unreliable — control check failed)";
   } else if (overallAiPercent < 30) {
     verdict = "Mostly human-written";
   } else if (overallAiPercent <= 70) {
@@ -313,5 +486,7 @@ export async function runAllDetectors(
     flaggedCount,
     totalChecked,
     detectors,
+    ...(reliabilityWarning ? { reliabilityWarning } : {}),
+    ...(controlScore !== null ? { controlScore } : {}),
   };
 }

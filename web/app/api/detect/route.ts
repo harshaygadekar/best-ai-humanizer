@@ -34,13 +34,16 @@ export async function POST(request: Request) {
 
   try {
     const report = await runAllDetectors(text, {
-      saplingApiKey: process.env.SAPLING_API_KEY || undefined,
+      // Sapling disabled — unreliable free-tier results (see diagnose-sapling.ts)
+      // saplingApiKey: process.env.SAPLING_API_KEY || undefined,
+      saplingApiKey: undefined,
       gptzeroApiKey: process.env.GPTZERO_API_KEY || undefined,
       zerogptRapidApiKey: process.env.ZEROGPT_RAPIDAPI_KEY || undefined,
       copyleaksEmail: process.env.COPYLEAKS_EMAIL || undefined,
       copyleaksApiKey: process.env.COPYLEAKS_API_KEY || undefined,
       winstonApiKey: process.env.WINSTON_API_KEY || undefined,
       originalityApiKey: process.env.ORIGINALITY_API_KEY || undefined,
+      cerebrasApiKey: process.env.CEREBRAS_API_KEY || undefined,
     });
 
     return NextResponse.json(report);

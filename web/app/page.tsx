@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Check, CheckCircle, Clipboard, Copy, Eraser, Loader2, Search, Settings, ShieldCheck, Sparkles, Wand2, XCircle } from "lucide-react";
+import { AlertTriangle, Check, CheckCircle, Clipboard, Copy, Eraser, Loader2, Settings, ShieldCheck, Sparkles, Wand2, XCircle } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { HUMANIZE_MODES } from "../lib/modes";
 import { readabilityHint, wordCount } from "../lib/text";
@@ -10,15 +10,12 @@ const SAMPLE_TEXT =
 
 type PrimaryProvider = "cerebras" | "groq" | "ollama-cloud";
 
-type DetectorStatus = "pass" | "fail" | "error" | "skipped";
-
 type DetectorResult = {
   id: string;
   name: string;
-  status: DetectorStatus;
+  status: "pass" | "fail" | "error" | "skipped";
   aiScore: number;
-  humanScore: number;
-  error?: string;
+  message?: string;
 };
 
 type DetectionReport = {
@@ -27,29 +24,30 @@ type DetectionReport = {
   flaggedCount: number;
   totalChecked: number;
   detectors: DetectorResult[];
+  reliabilityWarning?: string;
+  controlScore?: number;
 };
-
-const COOLDOWN_SECONDS = 45;
 
 export default function Home() {
   const [source, setSource] = useState("");
   const [output, setOutput] = useState("");
   const [modeId, setModeId] = useState("standard");
   const [primaryProvider, setPrimaryProvider] = useState<PrimaryProvider>("cerebras");
-  const [cerebrasModel, setCerebrasModel] = useState("");
+  const [cerebrasModel, setCerebrasModel] = useState("gpt-oss-120b");
   const [groqModel, setGroqModel] = useState("");
-  const [ollamaCloudModel, setOllamaCloudModel] = useState("gpt-oss:120b");
+  const [ollamaCloudModel, setOllamaCloudModel] = useState("gemma4:31b-cloud");
   const [showSettings, setShowSettings] = useState(false);
   const [voiceSample, setVoiceSample] = useState("");
   const [error, setError] = useState("");
   const [providerLabel, setProviderLabel] = useState("");
+  const [fallbackWarning, setFallbackWarning] = useState("");
   const [copied, setCopied] = useState(false);
   const [remainingTells, setRemainingTells] = useState<string[]>([]);
   const [isPending, startTransition] = useTransition();
 
   // Detection state
-  const [detectionReport, setDetectionReport] = useState<DetectionReport | null>(null);
   const [isDetecting, setIsDetecting] = useState(false);
+  const [detectionReport, setDetectionReport] = useState<DetectionReport | null>(null);
   const [detectError, setDetectError] = useState("");
   const [cooldown, setCooldown] = useState(0);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -57,6 +55,26 @@ export default function Home() {
   const activeMode = useMemo(() => HUMANIZE_MODES.find((mode) => mode.id === modeId) ?? HUMANIZE_MODES[0], [modeId]);
   const sourceWords = wordCount(source);
   const outputWords = wordCount(output);
+
+  function startCooldown() {
+    setCooldown(45);
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    cooldownRef.current = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          if (cooldownRef.current) clearInterval(cooldownRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (cooldownRef.current) clearInterval(cooldownRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -99,31 +117,10 @@ export default function Home() {
     };
   }, []);
 
-  // Cleanup cooldown timer on unmount
-  useEffect(() => {
-    return () => {
-      if (cooldownRef.current) clearInterval(cooldownRef.current);
-    };
-  }, []);
-
-  function startCooldown() {
-    setCooldown(COOLDOWN_SECONDS);
-    if (cooldownRef.current) clearInterval(cooldownRef.current);
-    cooldownRef.current = setInterval(() => {
-      setCooldown((prev) => {
-        if (prev <= 1) {
-          if (cooldownRef.current) clearInterval(cooldownRef.current);
-          cooldownRef.current = null;
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }
-
   function humanize() {
     setError("");
     setProviderLabel("");
+    setFallbackWarning("");
     setCopied(false);
     setRemainingTells([]);
     setDetectionReport(null);
@@ -139,8 +136,18 @@ export default function Home() {
         const data = await humanizeOnServer();
         setOutput(data.text);
         setRemainingTells(data.remainingTells ?? []);
-        const providerNames: Record<string, string> = { cerebras: "Cerebras", groq: "Groq", "ollama-cloud": "Ollama Cloud" };
+
+        const providerNames: Record<string, string> = {
+          cerebras: "Cerebras",
+          groq: "Groq",
+          "ollama-cloud": "Ollama Cloud",
+        };
         setProviderLabel(`${providerNames[data.provider] || data.provider} / ${data.model}`);
+
+        // Show a warning if any fallback providers were tried before success
+        if (data.fallbackErrors?.length) {
+          setFallbackWarning(`Primary provider failed, used fallback. Errors: ${data.fallbackErrors.join("; ")}`);
+        }
       } catch (caught) {
         const message = caught instanceof Error ? caught.message : "Humanization failed.";
         setError(message);
@@ -166,7 +173,13 @@ export default function Home() {
     if (!response.ok) {
       throw new Error(data.error ?? "Server request failed.");
     }
-    return data as { text: string; remainingTells?: string[]; provider: PrimaryProvider; model: string };
+    return data as {
+      text: string;
+      remainingTells?: string[];
+      provider: string;
+      model: string;
+      fallbackErrors?: string[];
+    };
   }
 
   const checkForAI = useCallback(async () => {
@@ -238,6 +251,7 @@ export default function Home() {
               <select value={primaryProvider} onChange={(event) => setPrimaryProvider(event.target.value as PrimaryProvider)}>
                 <option value="cerebras">Cerebras → Ollama Cloud → Groq</option>
                 <option value="ollama-cloud">Ollama Cloud → Cerebras → Groq</option>
+                <option value="groq">Groq → Cerebras → Ollama Cloud</option>
               </select>
             </label>
             <label>
@@ -250,7 +264,7 @@ export default function Home() {
             </label>
             <label>
               <span>Ollama Cloud model</span>
-              <input value={ollamaCloudModel} onChange={(event) => setOllamaCloudModel(event.target.value)} placeholder="gpt-oss:120b" />
+              <input value={ollamaCloudModel} onChange={(event) => setOllamaCloudModel(event.target.value)} placeholder="gemma4:31b-cloud" />
             </label>
             <label className="wide">
               <span>Optional voice sample</span>
@@ -326,6 +340,12 @@ export default function Home() {
           </section>
         </div>
 
+        {fallbackWarning ? (
+          <div className="warningBox">
+            <AlertTriangle size={16} />
+            <span>{fallbackWarning}</span>
+          </div>
+        ) : null}
         {error ? <div className="errorBox">{error}</div> : null}
         {detectError ? <div className="errorBox">{detectError}</div> : null}
 
@@ -353,8 +373,9 @@ export default function Home() {
 function DetectionPanel({ report }: { report: DetectionReport }) {
   const { overallAiPercent, verdict, flaggedCount, totalChecked, detectors } = report;
 
-  // Only show detectors that were actually called (not skipped)
-  const activeDetectors = detectors.filter((d) => d.status !== "skipped");
+  // Only show detectors that were actually called (not skipped).
+  // Sapling is hidden while disabled — re-enable in route.ts when ready.
+  const activeDetectors = detectors.filter((d) => d.status !== "skipped" && d.id !== "sapling");
 
   const verdictClass =
     overallAiPercent < 30 ? "verdictHuman" : overallAiPercent <= 70 ? "verdictMixed" : "verdictAi";
@@ -371,7 +392,6 @@ function DetectionPanel({ report }: { report: DetectionReport }) {
       : `${flaggedCount} of ${totalChecked} detector${totalChecked !== 1 ? "s" : ""} flagged AI.`;
 
   // Build conic-gradient for donut chart
-  const humanPercent = 100 - overallAiPercent;
   const aiColor = overallAiPercent < 30 ? "#4ade80" : overallAiPercent <= 70 ? "#fbbf24" : "#f87171";
   const trackColor = "rgba(255,255,255,0.08)";
   const donutGradient = `conic-gradient(${aiColor} 0% ${overallAiPercent}%, ${trackColor} ${overallAiPercent}% 100%)`;
@@ -386,6 +406,9 @@ function DetectionPanel({ report }: { report: DetectionReport }) {
         <div className="verdictText">
           <h3>{verdict}</h3>
           <p>{flagSummary}</p>
+          {report.reliabilityWarning ? (
+            <p className="reliabilityNote">{report.reliabilityWarning}</p>
+          ) : null}
         </div>
       </div>
 
